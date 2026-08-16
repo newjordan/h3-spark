@@ -1,0 +1,23 @@
+{
+  "artifact_sha256": "b3b4aee71430f2328adc876ded7ee9ddf2138ac76f16ebd07d833fe743d43036",
+  "architecture_sha256": "b580895428c778cca1d5a6f29dec95d84e9d1e46f19ee7e924cb05d05b5258b7",
+  "decision": "GO",
+  "executor_seconds": 213.0,
+  "output_filename": "fixed_ref_final_d7b_static_q_gate_s26081220_seed26081220_00001_.mp4",
+  "sampler_seconds": 147.0,
+  "sampler_seconds_per_step": 7.35,
+  "seed": 26081220,
+  "source_sha256": "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff",
+  "static_dynamic_fallback_layers": 4,
+  "static_layers_applied": 196,
+  "steps": 20,
+  "tag": "fixed_ref_final_d7b_static_q_gate_s26081220",
+  "wall_seconds": 213.8,
+  "workload": {
+    "frames": 124,
+    "height": 480,
+    "reference_count": 6,
+    "sequence_rows": 20423,
+    "width": 864
+  }
+}

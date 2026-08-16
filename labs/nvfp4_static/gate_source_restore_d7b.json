@@ -1,0 +1,18 @@
+{
+  "identity": "Live model.py restored to accepted source d7b196cc so StaticScalePlan architecture can match artifact b3b4aee7 / arch b5808954. Cache wrapper moved to model.py.bak-cache-wrapper; first_block_cache.py remains on disk, default off, no longer imported from model.py.",
+  "live_source_sha256": "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff",
+  "artifact_source_sha256": "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff",
+  "source_match": true,
+  "architecture_sha256": "b580895428c778cca1d5a6f29dec95d84e9d1e46f19ee7e924cb05d05b5258b7",
+  "artifact_sha256": "b3b4aee71430f2328adc876ded7ee9ddf2138ac76f16ebd07d833fe743d43036",
+  "artifact_prefix": "$HOME/h3/rms_adaln_nvfp4_static_lab/rebind_output/fixed_ref_h3_native_3seed_m130_final_d7b_q_static_gate",
+  "activate": "H3_NVFP4_STATIC_ARTIFACT=<prefix> plus the four exclusions",
+  "excluded_layers": [
+    "blocks.10.attn.qkv_proj",
+    "blocks.11.attn.qkv_proj",
+    "blocks.22.mlp.fc2",
+    "blocks.46.mlp.fc2"
+  ],
+  "cache_wrapper_backup": "$HOME/comfyui-h3-current/comfy/ldm/minimax/model.py.bak-cache-wrapper",
+  "pass": true
+}

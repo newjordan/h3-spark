@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "g_mismatches": 0,
+  "identity": "second pass loads residual/weight/AdaLN 8-wide; rstd reused; same staged AdaLN and NVFP4 algebra",
+  "pass": true,
+  "projected_s_per_20_step": 0.0043,
+  "q_mismatches": 0,
+  "residual_mismatches": 0,
+  "rows": 20423,
+  "rstd_mismatches": 0,
+  "s_mismatches": 0,
+  "saved_ms": 0.0043,
+  "stock_min_ms": 6.3208,
+  "vec_min_ms": 6.3165,
+  "width": 5376
+}

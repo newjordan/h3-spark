@@ -1,0 +1,23 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "12-warp 4-producer + 8-MMA on k2 256x64 K=128 == kitchen == unified k2. Kitchen launch split: A / Bg / Bu / scales issue in parallel. Same atom and smem as k2.",
+  "k": 5376,
+  "k2_full_min_ms": 39.2012,
+  "kitchen_gemm_min_ms": 20.1714,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_k2_ms": -1.5219,
+  "vs_kitchen_ms": -20.5517,
+  "ws4_full_min_ms": 40.7231,
+  "ws4_occupancy": 1,
+  "ws4_prod_warps": 4,
+  "ws4_regs": 168,
+  "ws4_smem": 86144,
+  "ws4_threads": 384,
+  "ws4_vs_k2_mismatches": 0,
+  "ws4_vs_kitchen_max_abs": 0.0,
+  "ws4_vs_kitchen_mismatches": 0,
+  "ws4_warps": 12
+}

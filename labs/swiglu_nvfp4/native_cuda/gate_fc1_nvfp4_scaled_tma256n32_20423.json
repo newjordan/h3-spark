@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "256x32 K=128 1-stage paired-N == kitchen == k2. TMA B is 64; compute is 32. 64-float acc is the occupancy cut.",
+  "k": 5376,
+  "k2_full_min_ms": 39.0139,
+  "kitchen_gemm_min_ms": 19.3708,
+  "n": 28672,
+  "n32_full_min_ms": 44.013,
+  "n32_occupancy": 2,
+  "n32_regs": 125,
+  "n32_smem": 28800,
+  "n32_smem_struct": 28800,
+  "n32_vs_k2_mismatches": 2362273,
+  "n32_vs_kitchen_mismatches": 2362273,
+  "pass": false,
+  "rows": 20423
+}

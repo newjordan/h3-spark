@@ -1,0 +1,4 @@
+$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat/CMakeFiles/h3_swiglu_nvfp4_native_v1.dir
+$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat/CMakeFiles/h3_swiglu_sat_cert.dir
+$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat/CMakeFiles/edit_cache.dir
+$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat/CMakeFiles/rebuild_cache.dir

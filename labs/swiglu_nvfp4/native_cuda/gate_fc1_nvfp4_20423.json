@@ -1,0 +1,22 @@
+{
+  "device": "NVIDIA GB10",
+  "from_product_min_ms": 5.8384,
+  "from_product_vs_eager_q": 0,
+  "from_product_vs_eager_s": 0,
+  "from_product_vs_eager_scale_exact": true,
+  "from_product_vs_twopass_q": 0,
+  "from_product_vs_twopass_s": 0,
+  "from_product_vs_twopass_scale_exact": true,
+  "full_finite": true,
+  "full_store_min_ms": 1235.6313,
+  "identity": "SM120 mxf4nvf4 m16n8k64 paired-N: same A fragment feeds gate and up; product epilogue is eager round(silu(round(g))*round(u))",
+  "k": 5376,
+  "n": 14336,
+  "pack_side_saved_ms": 5.0018,
+  "pass": true,
+  "prod_finite": true,
+  "product_store_min_ms": 1239.1521,
+  "product_vs_eager_full_mismatches": 0,
+  "rows": 20423,
+  "twopass_min_ms": 10.8402
+}

@@ -1,0 +1,31 @@
+{
+  "adapter_sha256": "b871de6a49c6b6891f1b12efee6594c235871faf35954193e640f59934b65086",
+  "binary_sha256": "92fbb3f5f6f5d64c17a51ce48db336709d22fbe8bdc538c303b7fed9c69540ec",
+  "byte_exact": true,
+  "candidate_version_delta": 1,
+  "contract_exact": true,
+  "cuda_version": "13.0",
+  "device_capability": [
+    12,
+    1
+  ],
+  "fused_gate_rms_adaln_nvfp4_ms": 4.477152109146118,
+  "gate_output_byte_mismatches": 0,
+  "global_scale_byte_mismatches": 0,
+  "modulation_dtype": "torch.float32",
+  "native_abi_version": 2,
+  "native_build_id": "h3-gate-rms-adaln-nvfp4-torch2.13-cf30153-sm120-gb10-safe-v2",
+  "packed_byte_mismatches": 0,
+  "qualification_status": "candidate_v2",
+  "rows": 20423,
+  "rstd_byte_mismatches": 0,
+  "saved_ms": 0.7093758583068848,
+  "scale_byte_mismatches": 0,
+  "source_sha256": "5dcba067e7c81896f407ed5ed2fdf5b1f0a1140dffa5e706439667652b74da45",
+  "speedup": 1.1584435464807508,
+  "stock_gate_plus_rms_adaln_nvfp4_ms": 5.186527967453003,
+  "stream": "nondefault",
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "width": 5376
+}

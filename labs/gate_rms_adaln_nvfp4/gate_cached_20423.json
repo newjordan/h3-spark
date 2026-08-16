@@ -1,0 +1,14 @@
+{
+  "cached_min_ms": 2.4961,
+  "device": "NVIDIA GB10",
+  "g_mismatches": 0,
+  "identity": "rms_adaln first pass loads each residual row once into registers for the RMS tree and the AdaLN amax; no extra HBM store",
+  "pass": true,
+  "projected_s_per_20_step": -0.1027,
+  "q_mismatches": 0,
+  "rows": 20423,
+  "s_mismatches": 0,
+  "saved_ms": -0.1027,
+  "stock_min_ms": 2.3934,
+  "width": 5376
+}

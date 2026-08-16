@@ -1,0 +1,36 @@
+{
+  "architecture_sha256": "b580895428c778cca1d5a6f29dec95d84e9d1e46f19ee7e924cb05d05b5258b7",
+  "artifact_prefix": "fixed_ref_h3_native_3seed_m130_final_d7b_q_static_gate",
+  "artifact_sha256": "b3b4aee71430f2328adc876ded7ee9ddf2138ac76f16ebd07d833fe743d43036",
+  "checkpoint_note": "descriptor rebound unchanged; 12.5 GB checkpoint was not rehashed",
+  "decision": "GO",
+  "evidence_manifest_sha256": "d5438e3555b339927a47cd53b205ed8a77581b51e4eb8e06f02385f9dbd39aca",
+  "excluded_layers": [
+    "blocks.10.attn.qkv_proj",
+    "blocks.11.attn.qkv_proj",
+    "blocks.22.mlp.fc2",
+    "blocks.46.mlp.fc2"
+  ],
+  "generic_verifier": {
+    "artifact_sha256": "b3b4aee71430f2328adc876ded7ee9ddf2138ac76f16ebd07d833fe743d43036",
+    "calls": 3920,
+    "excluded_layers": [
+      "blocks.10.attn.qkv_proj",
+      "blocks.11.attn.qkv_proj",
+      "blocks.22.mlp.fc2",
+      "blocks.46.mlp.fc2"
+    ],
+    "layers": 196,
+    "max_ratio": 0.9171489923168502,
+    "pass": true,
+    "validation_report": "fixed_ref_h3_native_3seed_m130_final_d7b_q_static_gate.nvfp4-input-scales.v3.nvfp4-input-scales.validation.v1.json"
+  },
+  "json_sha256": "7fae60984f46b944dbf8f91aca31ba39c7cf2b81259b497efe5bb6053ee5f390",
+  "mode": "emitted",
+  "prior_candidate_artifact_sha256": "f81d5e9765fe6761a5560417a1e88e92eb413b31741ec699282470e564bc08fc",
+  "rebind_utility_sha256": "abb3a44315f602605d9f11bc7d18b6ed1499c51525bcae83ecf020d7ee76f983",
+  "safetensors_sha256": "06e09c293b58826597008a4fe5c0c2f4e8b6d729d810beea13b20c413a2a3782",
+  "source_sha256": "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff",
+  "tensor_payload_sha256": "8913aea88572a7075dbde2d6a73444da22f6b02eb73df21994e9613eaf76bf1d",
+  "validation_sha256": "d46dc7ca1e3b6af1c8617a25d12268f241f0a5cd300f3d27fed820edd6d3b04d"
+}

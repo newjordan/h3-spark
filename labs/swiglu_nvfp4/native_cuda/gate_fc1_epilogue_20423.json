@@ -1,0 +1,23 @@
+{
+  "device": "NVIDIA GB10",
+  "fp32_ulp_store_roundtrip_mismatches": 0,
+  "from_product_min_ms": 5.807,
+  "from_product_vs_eager_q": 0,
+  "from_product_vs_eager_s": 0,
+  "from_product_vs_eager_scale_exact": true,
+  "from_product_vs_twopass_q": 0,
+  "from_product_vs_twopass_s": 0,
+  "from_product_vs_twopass_scale_exact": true,
+  "fused_fp32_vs_eager_q": 1456334,
+  "fused_fp32_vs_eager_s": 417040,
+  "identity": "FC1 epilogue must store eager round(silu(round(acc_g))*round(acc_u)); fused FP32 SiLU on the accumulator is a different function; bf16_nvfp4_dynamic on that 14336-wide product is the pack consumer",
+  "native_assoc_product_mismatches": 80420097,
+  "pack_side_saved_ms": 5.1018,
+  "pass": true,
+  "projected_s_per_20_step": 5.1018,
+  "python_fused_product_mismatches": 80748594,
+  "rows": 20423,
+  "twopass_min_ms": 10.9088,
+  "vec_min_ms": 10.6309,
+  "width": 28672
+}

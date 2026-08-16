@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "oneshot_min_ms": 11.969,
+  "oneshot_vs_eager_q": 0,
+  "oneshot_vs_eager_s": 0,
+  "oneshot_vs_eager_scale_exact": true,
+  "oneshot_vs_twopass_q": 0,
+  "oneshot_vs_twopass_s": 0,
+  "oneshot_vs_twopass_scale_exact": true,
+  "pass": true,
+  "projected_s_per_20_step": -1.3088,
+  "rows": 20423,
+  "saved_ms": -1.3088,
+  "twopass_min_ms": 10.6602,
+  "width": 28672
+}

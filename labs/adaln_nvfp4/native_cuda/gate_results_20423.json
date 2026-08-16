@@ -1,0 +1,28 @@
+{
+  "command": "check_cuda.py --rows 20423",
+  "timing_enabled": false,
+  "cases": [
+    {
+      "byte_exact": true,
+      "dynamic_global_scale_exact": true,
+      "dynamic_packed_byte_mismatches": 0,
+      "dynamic_scale_byte_mismatches": 0,
+      "modulation_dtype": "torch.bfloat16",
+      "modulation_stride": [32256, 1],
+      "rows": 20423,
+      "static_packed_byte_mismatches": 0,
+      "static_scale_byte_mismatches": 0
+    },
+    {
+      "byte_exact": true,
+      "dynamic_global_scale_exact": true,
+      "dynamic_packed_byte_mismatches": 0,
+      "dynamic_scale_byte_mismatches": 0,
+      "modulation_dtype": "torch.float32",
+      "modulation_stride": [32256, 1],
+      "rows": 20423,
+      "static_packed_byte_mismatches": 0,
+      "static_scale_byte_mismatches": 0
+    }
+  ]
+}

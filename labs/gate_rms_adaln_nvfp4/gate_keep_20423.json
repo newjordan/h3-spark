@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "g_mismatches": 0,
+  "identity": "keep first-pass AdaLN BF16 and pack from it; residual mutation unchanged; second pass does not recompute RMS/AdaLN",
+  "keep_min_ms": 7.3529,
+  "pass": true,
+  "projected_s_per_20_step": -1.0181,
+  "q_mismatches": 0,
+  "residual_mismatches": 0,
+  "rows": 20423,
+  "rstd_mismatches": 0,
+  "s_mismatches": 0,
+  "saved_ms": -1.0181,
+  "stock_min_ms": 6.3348,
+  "width": 5376
+}

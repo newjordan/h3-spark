@@ -1,0 +1,13 @@
+{
+  "attention_bf16_exact": true,
+  "contract": {
+    "epsilon": 1e-05,
+    "head_dim": 128,
+    "rope_dim": 96,
+    "rope_shape": [1, 20423, 1, 48, 2, 2]
+  },
+  "nondefault_stream_attention_exact": true,
+  "shape": [1, 20423, 56, 128],
+  "valid_for_production_shape": true,
+  "wall_seconds": 2.27
+}

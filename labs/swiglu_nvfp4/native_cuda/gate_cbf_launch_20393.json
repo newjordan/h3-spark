@@ -1,0 +1,71 @@
+{
+  "identity": "Command Buffer Full 1.625 s/eval is GPU idle between launches, not a .item()/synchronize host sync and not a compute kernel. Serving MiniMax DiT (50 blocks) has zero .item() and zero synchronize. 1524 cudaLaunchKernel + 250 cuLaunchKernelEx = 35.48 launches/block; 460 CBF stalls = 9.2/block = 9 named two-pass/alloc barriers + 10 leftover. Serving SwiGLU still issues amax + <<<1,1>>> finalize + pack. aten::zeros 400 = 8/block slab tax. torch.compile/graph-capture forbidden. Not a seconds-scale exact gate. Not promoted.",
+  "device": "NVIDIA GB10",
+  "rows_measured": 20393,
+  "blocks": 50,
+  "hot_path": {
+    "root": "integration/comfyui/comfy/ldm/minimax",
+    "files": [
+      "adaln_nvfp4.py",
+      "crossblock_gate_qkv.py",
+      "gate_rms_adaln_nvfp4.py",
+      "gate_rms_adaln_nvfp4_static.py",
+      "kernels.py",
+      "linear_nvfp4.py",
+      "model.py",
+      "q_rms_rope_int8.py",
+      "rms_adaln_nvfp4.py",
+      "rms_adaln_nvfp4_static.py",
+      "swiglu_nvfp4.py"
+    ],
+    "item_or_synchronize": 0,
+    "hits": []
+  },
+  "profile": {
+    "source_txt": "$HOME/h3/results/accepted_stack_20260812.txt",
+    "source_json": "benchmarks/profiles/accepted_stack_20260812.json",
+    "parsed": {
+      "command_buffer_full": 460,
+      "cudaLaunchKernel": 1524,
+      "cuLaunchKernelEx": 250,
+      "aten_zeros": 400,
+      "finalize_dynamic_scale": 50
+    },
+    "cbf_cuda_ms": 1625.0,
+    "cbf_cpu_s": 3.205,
+    "cbf_calls": 460,
+    "cudaLaunchKernel": 1524,
+    "cuLaunchKernelEx": 250,
+    "aten_zeros": 400,
+    "finalize_dynamic_scale": 50,
+    "compact_cbf_ms": 1625.0
+  },
+  "algebra": {
+    "launches": 1774,
+    "launches_per_block": 35.48,
+    "cbf_per_block": 9.2,
+    "zeros_per_block": 8.0,
+    "named_barriers_per_block": [
+      "swiglu_amax -> finalize_dynamic_scale<<<1,1>>>",
+      "finalize_dynamic_scale -> swiglu_pack",
+      "rms_adaln_first -> rms_adaln_second (qkv)",
+      "gate_rms_adaln_first -> rms_adaln_second (mlp)",
+      "TransposePadPermute -> QuantInt8",
+      "QuantInt8 -> MeanScale",
+      "MeanScale -> sage_attn",
+      "sage_attn -> out bf16_nvfp4_dynamic",
+      "aten::zeros slab (8/block) before two-pass pack"
+    ],
+    "named_barrier_count": 9,
+    "leftover_cbf_outside_50_block": 10,
+    "reconstructed_cbf_calls": 460,
+    "cbf_ms_per_stall": 3.532608695652174,
+    "object_wrong": "host .item()/synchronize in the DiT hot path",
+    "object_right": "launch-count two-pass + zeros gaps; CBF is idle, not math",
+    "do_not": "torch.compile / cuda graph a production default; no seconds-scale exact gate this tick"
+  },
+  "promoted": false,
+  "serving_default": "stock",
+  "graph_captured": false,
+  "pass": true
+}

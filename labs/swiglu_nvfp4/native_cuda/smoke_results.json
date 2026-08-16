@@ -1,0 +1,74 @@
+{
+  "device": "NVIDIA GB10",
+  "torch": "2.13.0+cu130",
+  "rows": 129,
+  "raw_shape": [
+    129,
+    28672
+  ],
+  "eager_bf16_rounding": true,
+  "correctness": {
+    "packed_shape": [
+      144,
+      7168
+    ],
+    "scale_shape": [
+      256,
+      896
+    ],
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0
+  },
+  "dynamic_correctness": {
+    "global_scale_exact": true,
+    "reference_global_scale": 0.00433349609375,
+    "native_global_scale": 0.00433349609375,
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "packed_mismatched_nibbles": 0,
+    "signed_zero_only": true,
+    "signed_zero_nibble_mismatches": 0,
+    "non_signed_zero_nibble_mismatches": 0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0,
+    "dequant_logical_rows_bit_exact": true,
+    "dequant_logical_rows_numeric_exact": true,
+    "dequant_logical_rows_max_abs": 0.0
+  },
+  "baseline": {
+    "median_ms": 0.04729599878191948,
+    "min_ms": 0.045152001082897186,
+    "p90_ms": 0.05071999877691269
+  },
+  "fused": {
+    "median_ms": 0.02876799926161766,
+    "min_ms": 0.028543999418616295,
+    "p90_ms": 0.03017600066959858
+  },
+  "median_speedup": 1.6440489431262577,
+  "median_saved_per_layer_ms": 0.01852799952030182,
+  "estimated_saved_50_layers_ms": 0.9263999760150909,
+  "estimated_saved_50_layers_20_steps_s": 0.01852799952030182,
+  "dynamic_timing": {
+    "baseline": {
+      "median_ms": 0.07116799801588058,
+      "min_ms": 0.07075200229883194,
+      "p90_ms": 0.0724480003118515
+    },
+    "native": {
+      "median_ms": 0.05548800155520439,
+      "min_ms": 0.054976001381874084,
+      "p90_ms": 0.057151999324560165
+    },
+    "median_speedup": 1.282583549978392,
+    "median_saved_per_layer_ms": 0.015679996460676193,
+    "estimated_saved_50_layers_ms": 0.7839998230338097,
+    "estimated_saved_50_layers_20_steps_s": 0.015679996460676193
+  }
+}

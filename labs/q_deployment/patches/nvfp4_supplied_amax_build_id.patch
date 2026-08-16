@@ -1,0 +1,17 @@
+--- a/swiglu_nvfp4_cuda.cu
++++ b/swiglu_nvfp4_cuda.cu
+@@ -695,6 +695,14 @@
+ }  // namespace
+ 
+ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
++  // Additive ABI token for the producer-supplied amax route.  Legacy
++  // BF16/SwiGLU entrypoints intentionally remain usable without this token;
++  // only the H3 attention-output consumer is allowed to require it.
++  m.def(
++      "h3_supplied_amax_build_id",
++      []() {
++        return "h3-nvfp4-supplied-amax-v1-torch2.13-sm120";
++      });
+   m.def(
+       "bf16_nvfp4",
+       &bf16_nvfp4,

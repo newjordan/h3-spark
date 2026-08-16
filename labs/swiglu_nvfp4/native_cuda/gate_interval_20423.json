@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "G_L": 0.00640869140625,
+      "G_U": 0.006500244140625,
+      "L_abs_bits": 16778,
+      "U_abs_bits": 16780,
+      "case": "randn",
+      "interval_min_ms": 15.0104,
+      "pass": true,
+      "saved_ms": -4.409,
+      "scale_interval_equal": false,
+      "sparse_exact_evals": 1,
+      "sparse_scanned": true,
+      "twopass_min_ms": 10.6014,
+      "vs_eager_q": 0,
+      "vs_eager_s": 0,
+      "vs_eager_scale": true,
+      "vs_twopass_q": 0,
+      "vs_twopass_s": 0,
+      "vs_twopass_scale": true
+    },
+    {
+      "G_L": 8.5,
+      "G_U": 8.5625,
+      "L_abs_bits": 18099,
+      "U_abs_bits": 18100,
+      "case": "large_pos_gate",
+      "interval_min_ms": 15.4336,
+      "pass": true,
+      "saved_ms": -4.4347,
+      "scale_interval_equal": false,
+      "sparse_exact_evals": 1,
+      "sparse_scanned": true,
+      "twopass_min_ms": 10.9989,
+      "vs_eager_q": 0,
+      "vs_eager_s": 0,
+      "vs_eager_scale": true,
+      "vs_twopass_q": 0,
+      "vs_twopass_s": 0,
+      "vs_twopass_scale": true
+    }
+  ],
+  "device": "NVIDIA GB10",
+  "identity": "G(L)==G(U) interval skip",
+  "pass": true,
+  "rows": 20423,
+  "width": 28672
+}

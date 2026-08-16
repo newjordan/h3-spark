@@ -1,0 +1,17 @@
+{
+  "acc1_bytes": 131072,
+  "acc1_exceeds_optin": true,
+  "device": "NVIDIA GB10",
+  "identity": "Sequential N-halves that stream A once need a second 256x64 FP32 acc (128 KiB) plus TMA. GB10 block opt-in is 99 KiB, so acc1 cannot live in smem. Fail-closed.",
+  "k": 5376,
+  "launch_error": "sequential N-halves need 209024 B smem (131072 B FP32 acc1 + TMA); device opt-in is 101376 B",
+  "launched": false,
+  "n": 14336,
+  "pass": true,
+  "rows": 20423,
+  "smem_optin": 101376,
+  "smem_per_block": 49152,
+  "smem_per_sm": 102400,
+  "tile_exceeds_optin": true,
+  "tile_smem_bytes": 209024
+}

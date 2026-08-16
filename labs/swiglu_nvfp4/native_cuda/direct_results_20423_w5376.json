@@ -1,0 +1,85 @@
+{
+  "checks": [
+    {
+      "byte_exact": true,
+      "dynamic_global_scale_exact": true,
+      "dynamic_packed_byte_mismatches": 0,
+      "dynamic_scale_byte_mismatches": 0,
+      "packed_shape": [
+        20432,
+        2688
+      ],
+      "scale_shape": [
+        20480,
+        336
+      ],
+      "shape": [
+        20423,
+        5376
+      ],
+      "static_packed_byte_mismatches": 0,
+      "static_scale_byte_mismatches": 0
+    },
+    {
+      "byte_exact": true,
+      "dynamic_global_scale_exact": true,
+      "dynamic_packed_byte_mismatches": 0,
+      "dynamic_scale_byte_mismatches": 0,
+      "packed_shape": [
+        20432,
+        3584
+      ],
+      "scale_shape": [
+        20480,
+        448
+      ],
+      "shape": [
+        20423,
+        7168
+      ],
+      "static_packed_byte_mismatches": 0,
+      "static_scale_byte_mismatches": 0
+    },
+    {
+      "byte_exact": true,
+      "dynamic_global_scale_exact": true,
+      "dynamic_packed_byte_mismatches": 0,
+      "dynamic_scale_byte_mismatches": 0,
+      "packed_shape": [
+        20432,
+        7168
+      ],
+      "scale_shape": [
+        20480,
+        896
+      ],
+      "shape": [
+        20423,
+        14336
+      ],
+      "static_packed_byte_mismatches": 0,
+      "static_scale_byte_mismatches": 0
+    }
+  ],
+  "device": "NVIDIA GB10",
+  "rows": 20423,
+  "timing": {
+    "median_speedup": 1.8544654371281502,
+    "native_median_ms": 2.2161600589752197,
+    "native_ms": [
+      2.208832025527954,
+      2.2162880897521973,
+      2.2161600589752197
+    ],
+    "repeats": 3,
+    "rows": 20423,
+    "stock_median_ms": 4.109792232513428,
+    "stock_ms": [
+      4.109792232513428,
+      4.111936092376709,
+      4.108128070831299
+    ],
+    "width": 5376
+  },
+  "torch": "2.13.0+cu130"
+}

@@ -1,0 +1,22 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "1-stage K=128 256x64 paired-N == kitchen == 3-stage k2. Smem drop is the occupancy variable.",
+  "k": 5376,
+  "k2_full_min_ms": 40.4624,
+  "k2_occupancy": 1,
+  "k2_regs": 167,
+  "k2_smem": 86144,
+  "kitchen_gemm_min_ms": 20.0947,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "s1_full_min_ms": 47.8348,
+  "s1_occupancy": 1,
+  "s1_regs": 166,
+  "s1_smem": 28800,
+  "s1_vs_k2_mismatches": 0,
+  "s1_vs_kitchen_mismatches": 0,
+  "vs_k2_ms": -7.3724,
+  "vs_kitchen_ms": -27.7401
+}

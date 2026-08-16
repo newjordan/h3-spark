@@ -1,0 +1,23 @@
+{
+  "dequant_a_rows": 20423,
+  "dequant_bf16_linear_min_ms": 89.1726,
+  "device": "NVIDIA GB10",
+  "eager_bf16_vs_kitchen": 194184263,
+  "from_product_vs_kitchen_q": 0,
+  "from_product_vs_kitchen_s": 0,
+  "from_product_vs_kitchen_scale_exact": true,
+  "identity": "kitchen NVFP4 MMA vs dequant(A)@dequant(B) in BF16 linear and in FP32-then-BF16; SwiGLU pack of each path",
+  "k": 5376,
+  "kitchen_gemm_min_ms": 23.0572,
+  "kitchen_mma_equals_dequant_bf16": false,
+  "kitchen_mma_equals_dequant_fp32": false,
+  "n": 14336,
+  "pack_bf16_vs_kitchen_q": 3483849,
+  "pack_bf16_vs_kitchen_s": 644390,
+  "pack_bf16_vs_kitchen_scale_exact": true,
+  "pass": true,
+  "rows": 20423,
+  "y_bf16_vs_fp32": 662940,
+  "y_bf16_vs_kitchen": 297418006,
+  "y_fp32_vs_kitchen": 297433574
+}

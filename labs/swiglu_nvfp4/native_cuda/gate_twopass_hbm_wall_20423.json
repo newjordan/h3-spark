@@ -1,0 +1,22 @@
+{
+  "copy_256mib_ms": 2.4164,
+  "copy_gbs": 222.18,
+  "device": "NVIDIA GB10",
+  "identity": "8-wide two-pass is a 2-read of the 1171 MiB [gate|up] pair. GB10 copy bandwidth sets a ~11 ms wall. Static rebind is the 1-read wall. L2 is 24 MiB; products are 586 MiB, so a no-store exact pack must re-read. Coop/fused still read twice.",
+  "l2_bytes": 25165824,
+  "l2_holds_prod": false,
+  "l2_holds_raw": false,
+  "one_read_wall_ms": 5.2712,
+  "pass": true,
+  "prod_bytes": 585568256,
+  "raw_bytes": 1171136512,
+  "smem_optin": 101376,
+  "source": "kitchen_fc1_nvfp4_20423x5376x28672",
+  "static_over_one_read": 1.077,
+  "static_rebind_min_ms": 5.6775,
+  "static_vs_twopass_q": 0,
+  "static_vs_twopass_s": 0,
+  "two_read_wall_ms": 10.5424,
+  "twopass_min_ms": 10.776,
+  "twopass_over_two_read": 1.022
+}

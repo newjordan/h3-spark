@@ -1,0 +1,42 @@
+{
+  "attention": "sage2-quality",
+  "cross_step_cache": "off",
+  "decision": "no_e2e_win_hold_default",
+  "delta_auto_minus_stock_executor_seconds": 1.7,
+  "frames": 124,
+  "height": 480,
+  "host": "dgx-spark-host",
+  "kernel_projection_seconds": 0.511881,
+  "modulation_fusion": "exact",
+  "note": "Full FixedRef executor includes VAE and MP4. Pair does not isolate the DiT stack. Do not treat 1.7s as a kernel regression or a 0.511881s confirmation.",
+  "nvfp4_scales": "dynamic",
+  "q_rms_rope_int8_fusion": "auto",
+  "reference_count": 6,
+  "rms_adaln_nvfp4_fusion": "auto",
+  "runs": {
+    "auto_first": {
+      "executor_seconds": 182.8,
+      "prompt_id": "9ddd0e26-cdab-40ef-83d7-00c8ce30328d",
+      "tag": "crossblock_auto_chef20_dyn",
+      "warmth": "after_2step_smoke"
+    },
+    "auto_warm": {
+      "executor_seconds": 180.8,
+      "output_filename": "crossblock_auto_chef20_dyn_warm_seed26081220_00001_.mp4",
+      "prompt_id": "d18ed419-dd22-43ee-8d1c-8760a2a05d75",
+      "tag": "crossblock_auto_chef20_dyn_warm",
+      "warmth": "after_stock_twin"
+    },
+    "stock_warm": {
+      "executor_seconds": 179.1,
+      "output_filename": "crossblock_stock_chef20_dyn_seed26081220_00001_.mp4",
+      "prompt_id": "ae025708-071d-47f1-b3ee-8e3477c2f4f5",
+      "tag": "crossblock_stock_chef20_dyn",
+      "warmth": "after_first_auto"
+    }
+  },
+  "seed": 26081220,
+  "steps": 20,
+  "swiglu_nvfp4_fusion": "auto",
+  "width": 864
+}

@@ -1,0 +1,36 @@
+{
+  "identity": "Kitchen 128x128x256 launches 384 threads (12 warps), 88064 B dynamic smem, 168 regs/thread, 0 spill, grid 224x160. Lab clone is 256 threads (8 warps). The 3x gap includes this launch structure, not tile geometry (already byte-exact).",
+  "kitchen": {
+    "block": [
+      384,
+      1,
+      1
+    ],
+    "dynamic_smem": 88064,
+    "grid": [
+      224,
+      160,
+      1
+    ],
+    "local_mem_per_thread": 0,
+    "name": "cutlass3x_sm120_bstensorop_s16864gemm_block_scaled_ue4m3xe2m1_ue4m3xe2m1_f32_bf16_bf16_128x128x256_1x1x1_0_tnn_align32_o_vs16_bias_bf16_relu",
+    "regs_per_thread": 168,
+    "smem_executed": 102400,
+    "static_smem": 0,
+    "threads": 384,
+    "time_ms": 19.6405,
+    "time_ns": 19640480,
+    "warps": 12
+  },
+  "lab": {
+    "block": [256, 1, 1],
+    "dynamic_smem": 0,
+    "grid": [224, 160, 1],
+    "name": "fc1_nvfp4_scaled_tma128n128k4_kernel",
+    "source": "kernel constants (nsys sqlite export empty)",
+    "static_smem_bytes": 73744,
+    "threads": 256,
+    "warps": 8
+  },
+  "pass": true
+}

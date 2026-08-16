@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "ldmatrix.x4 A on k2 (256x64 K=128) == kitchen group/tidg fragment == scalar k2. Best lab mainloop + kitchen A load.",
+  "k": 5376,
+  "k2_full_min_ms": 38.9594,
+  "kitchen_gemm_min_ms": 20.2181,
+  "ldm_full_min_ms": 38.9408,
+  "ldm_vs_k2_mismatches": 0,
+  "ldm_vs_kitchen_mismatches": 0,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_k2_ms": 0.0186,
+  "vs_kitchen_ms": -18.7227
+}

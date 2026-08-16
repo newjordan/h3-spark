@@ -1,0 +1,1 @@
+-isystem "$HOME/comfyui-h3-current/.venv/lib/python3.13/site-packages/torch/include" -isystem "$HOME/comfyui-h3-current/.venv/lib/python3.13/site-packages/torch/include/torch/csrc/api/include" -isystem /usr/local/cuda/include -isystem $HOME/miniconda3/include/python3.13

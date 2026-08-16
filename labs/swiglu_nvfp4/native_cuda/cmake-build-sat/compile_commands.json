@@ -1,0 +1,14 @@
+[
+{
+  "directory": "$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler -DTORCH_EXTENSION_NAME=h3_swiglu_nvfp4_native_v1 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_NVSHMEM -DUSE_RPC -DUSE_TENSORPIPE -Dh3_swiglu_nvfp4_native_v1_EXPORTS --options-file CMakeFiles/h3_swiglu_nvfp4_native_v1.dir/includes_CUDA.rsp  -DONNX_NAMESPACE=onnx_c2 -gencode arch=compute_121a,code=sm_121a -Xcudafe --diag_suppress=cc_clobber_ignored,--diag_suppress=field_without_dll_interface,--diag_suppress=base_class_has_different_dll_interface,--diag_suppress=dll_interface_conflict_none_assumed,--diag_suppress=dll_interface_conflict_dllexport_assumed,--diag_suppress=bad_friend_decl --expt-relaxed-constexpr --expt-extended-lambda -std=c++20 -Xcompiler=-fPIC -O3 --expt-relaxed-constexpr -U__CUDA_NO_BFLOAT16_CONVERSIONS__ -x cu -c $HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/swiglu_nvfp4_cuda.cu -o CMakeFiles/h3_swiglu_nvfp4_native_v1.dir/swiglu_nvfp4_cuda.cu.o",
+  "file": "$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/swiglu_nvfp4_cuda.cu",
+  "output": "CMakeFiles/h3_swiglu_nvfp4_native_v1.dir/swiglu_nvfp4_cuda.cu.o"
+},
+{
+  "directory": "$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/cmake-build-sat",
+  "command": "/usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler -DTORCH_EXTENSION_NAME=h3_swiglu_sat_cert -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_NVSHMEM -DUSE_RPC -DUSE_TENSORPIPE -Dh3_swiglu_sat_cert_EXPORTS --options-file CMakeFiles/h3_swiglu_sat_cert.dir/includes_CUDA.rsp  -DONNX_NAMESPACE=onnx_c2 -gencode arch=compute_121a,code=sm_121a -Xcudafe --diag_suppress=cc_clobber_ignored,--diag_suppress=field_without_dll_interface,--diag_suppress=base_class_has_different_dll_interface,--diag_suppress=dll_interface_conflict_none_assumed,--diag_suppress=dll_interface_conflict_dllexport_assumed,--diag_suppress=bad_friend_decl --expt-relaxed-constexpr --expt-extended-lambda -std=c++20 -Xcompiler=-fPIC -O3 --expt-relaxed-constexpr -U__CUDA_NO_BFLOAT16_CONVERSIONS__ -x cu -c $HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/swiglu_sat_cert.cu -o CMakeFiles/h3_swiglu_sat_cert.dir/swiglu_sat_cert.cu.o",
+  "file": "$HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/swiglu_sat_cert.cu",
+  "output": "CMakeFiles/h3_swiglu_sat_cert.dir/swiglu_sat_cert.cu.o"
+}
+]

@@ -1,0 +1,36 @@
+{
+  "valid_for_production": true,
+  "contract": {
+    "epsilon": 1e-05,
+    "head_dim": 128,
+    "rope_dim": 96,
+    "rope_shape": [1, 20423, 1, 48, 2, 2]
+  },
+  "nondefault_stream_k_exact": true,
+  "nondefault_stream_q_exact": true,
+  "nondefault_stream_scale_exact": true,
+  "shape": [
+    1,
+    20423,
+    56,
+    128
+  ],
+  "timing_ms": {
+    "ck_plus_sage_q": 7.417600154876709,
+    "fused_w16": 6.193312168121338,
+    "fused_w32": 6.374144077301025,
+    "fused_w8": 6.45743989944458,
+    "saved_w16": 1.224287986755371,
+    "saved_w32": 1.0434560775756836,
+    "saved_w8": 0.9601602554321289
+  },
+  "w16_k_bf16_exact": true,
+  "w16_q_int8_exact": true,
+  "w16_q_scale_exact": true,
+  "w32_k_bf16_exact": true,
+  "w32_q_int8_exact": true,
+  "w32_q_scale_exact": true,
+  "w8_k_bf16_exact": true,
+  "w8_q_int8_exact": true,
+  "w8_q_scale_exact": true
+}

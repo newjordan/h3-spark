@@ -1,0 +1,539 @@
+diff --git a/tests/test_minimax_h3_linear_nvfp4.py b/tests/test_minimax_h3_linear_nvfp4.py
+index 083f829..28d6ae8 100644
+--- a/tests/test_minimax_h3_linear_nvfp4.py
++++ b/tests/test_minimax_h3_linear_nvfp4.py
+@@ -138,6 +138,10 @@ def test_static_scale_requires_exact_shape_dtype_and_certified_identity():
+         _h3_nvfp4_allowed_shapes=frozenset({(17, 5376)}),
+         _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
+         _h3_nvfp4_validated_input_scale=scale,
++        _h3_nvfp4_plan_hook_ids=(1, 2),
++        _forward_pre_hooks={1: object()},
++        _forward_hooks={2: object()},
++        _forward_hooks_always_called={2},
+     )
+     assert linear_nvfp4._static_scale(linear, x) is scale
+ 
+@@ -263,6 +267,10 @@ def test_global_forward_hook_disables_dynamic_and_static_routes():
+         _h3_nvfp4_allowed_shapes=frozenset({tuple(x.shape)}),
+         _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
+         _h3_nvfp4_validated_input_scale=scale,
++        _h3_nvfp4_plan_hook_ids=(1, 2),
++        _forward_pre_hooks={1: object()},
++        _forward_hooks={2: object()},
++        _forward_hooks_always_called={2},
+     )
+     handle = torch.nn.modules.module.register_module_forward_pre_hook(
+         lambda _module, _args: None
+diff --git a/tests/test_minimax_h3_q_static_coexistence.py b/tests/test_minimax_h3_q_static_coexistence.py
+new file mode 100644
+index 0000000..90ba4ae
+--- /dev/null
++++ b/tests/test_minimax_h3_q_static_coexistence.py
+@@ -0,0 +1,470 @@
++from types import SimpleNamespace
++
++import pytest
++import torch
++from torch._subclasses.fake_tensor import FakeTensorMode
++
++import comfy.ldm.minimax.model as minimax_model
++from comfy.ldm.minimax import linear_nvfp4
++
++
++class TinyPlanLinear(torch.nn.Module):
++    def __init__(self):
++        super().__init__()
++        self.in_features = 7168
++        self.out_features = 5376
++        self._orig_shape = (self.out_features, self.in_features)
++        self.quant_format = "nvfp4"
++        self.layout_type = linear_nvfp4.NVFP4_LAYOUT
++        self.weight_function = []
++        self.bias_function = []
++        self.weight = torch.nn.Parameter(torch.zeros(1), requires_grad=False)
++
++    def forward(self, value):
++        return value
++
++
++class TorchOperations:
++    Linear = torch.nn.Linear
++    RMSNorm = torch.nn.RMSNorm
++
++
++class FakeQuantizedTensor:
++    _layout_cls = linear_nvfp4.NVFP4_LAYOUT
++    _params = SimpleNamespace(transposed=False)
++
++
++def _static_linear(scale, rows=17):
++    return SimpleNamespace(
++        in_features=7168,
++        out_features=5376,
++        bias=None,
++        quant_format="nvfp4",
++        layout_type=linear_nvfp4.NVFP4_LAYOUT,
++        weight=FakeQuantizedTensor(),
++        pre_quant_scale=None,
++        _full_precision_mm=False,
++        comfy_force_cast_weights=False,
++        weight_function=[],
++        bias_function=[],
++        weight_lowvram_function=None,
++        bias_lowvram_function=None,
++        input_scale=scale,
++        _h3_nvfp4_fusion_enabled=True,
++        _h3_nvfp4_allowed_shapes=frozenset({(rows, 7168)}),
++        _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
++        _h3_nvfp4_validated_input_scale=scale,
++        _h3_nvfp4_plan_hook_ids=(11, 12),
++        _forward_pre_hooks={11: object()},
++        _forward_hooks={12: object()},
++        _forward_hooks_always_called={12},
++    )
++
++
++def _cuda_scales():
++    with FakeTensorMode():
++        return (
++            torch.empty((), device="cuda:0", dtype=torch.float32),
++            torch.empty((), device="cuda:0", dtype=torch.float32),
++            torch.empty((), device="cuda:1", dtype=torch.float32),
++        )
++
++
++def _attention():
++    module = minimax_model.Attention(
++        hidden=4,
++        heads=2,
++        head_dim=2,
++        eps=1e-6,
++        dtype=torch.bfloat16,
++        operations=TorchOperations,
++    )
++    module.q_norm.weight.requires_grad_(False)
++    module.k_norm.weight.requires_grad_(False)
++    return module
++
++
++def _q_inputs():
++    return (
++        torch.randn(3, 12, dtype=torch.bfloat16),
++        torch.empty((1, 3, 1, 1, 2, 2), dtype=torch.bfloat16),
++    )
++
++
++def test_static_output_preflight_requires_exact_v3_bridge(monkeypatch):
++    scale, other_scale, other_device_scale = _cuda_scales()
++    linear = _static_linear(scale)
++    monkeypatch.setattr(linear_nvfp4, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(linear_nvfp4, "_cuda_device_supported", lambda device: True)
++
++    assert not linear_nvfp4.can_static_linear_for_output(
++        linear, 17, "cuda:0", torch.bfloat16, "auto"
++    )
++    with torch.no_grad():
++        assert linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        assert linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "static"
++        )
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "stock"
++        )
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 18, "cuda:0", torch.bfloat16, "auto"
++        )
++
++        linear._h3_nvfp4_fusion_enabled = False
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear._h3_nvfp4_fusion_enabled = True
++
++        linear._h3_nvfp4_validated_input_scale = other_scale
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear._h3_nvfp4_validated_input_scale = scale
++        linear.input_scale = other_device_scale
++        linear._h3_nvfp4_validated_input_scale = other_device_scale
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear.input_scale = scale
++        linear._h3_nvfp4_validated_input_scale = scale
++
++        del linear._h3_nvfp4_allowed_dtypes
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++
++
++def test_static_output_preflight_rejects_config_and_global_hooks(monkeypatch):
++    scale, _, _ = _cuda_scales()
++    linear = _static_linear(scale)
++    monkeypatch.setattr(linear_nvfp4, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(linear_nvfp4, "_cuda_device_supported", lambda device: True)
++
++    with torch.no_grad():
++        linear.out_features = 7168
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear.out_features = 5376
++        # StaticScalePlan publishes the bridge only when no hook preexists,
++        # then installs its own shape guards. A complete bridge therefore
++        # remains eligible while those local plan hooks are present.
++        linear._forward_pre_hooks = {11: object()}
++        linear._forward_hooks = {12: object()}
++        assert linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear._forward_hooks[13] = object()
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        del linear._forward_hooks[13]
++        linear._forward_hooks_always_called.clear()
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        linear._forward_hooks_always_called.add(12)
++        linear._backward_hooks = {14: object()}
++        assert not linear_nvfp4.can_static_linear_for_output(
++            linear, 17, "cuda:0", torch.bfloat16, "auto"
++        )
++        del linear._backward_hooks
++
++        handle = torch.nn.modules.module.register_module_forward_pre_hook(
++            lambda module, args: None
++        )
++        try:
++            assert not linear_nvfp4.can_static_linear_for_output(
++                linear, 17, "cuda:0", torch.bfloat16, "auto"
++            )
++        finally:
++            handle.remove()
++
++
++def test_static_q_route_ignores_amax_and_stock_projects_once_on_miss(monkeypatch):
++    attention = _attention()
++    qkv, rope = _q_inputs()
++    override = object()
++    candidate = torch.randn((1, 3, 4), dtype=torch.bfloat16)
++    calls = []
++
++    class Producer:
++        owner = override
++
++        def can_call(self, *args, **kwargs):
++            calls.append("preflight")
++            return True
++
++        def __call__(self, *args, **kwargs):
++            calls.append("attention")
++            bits = torch.tensor([1], dtype=torch.int32)
++            return candidate, minimax_model.H3AttentionAmaxMarker(bits, self)
++
++    monkeypatch.setattr(
++        minimax_model, "can_static_linear_for_output", lambda *args: True
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "can_linear_from_amax_bits_for_output",
++        lambda *args: (_ for _ in ()).throw(
++            AssertionError("dynamic supplied-amax preflight ran")
++        ),
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.model_management, "cast_to", lambda value, **kwargs: value
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.quant_ops.ck,
++        "rms_rope_split_half_",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("stock Q/K transform ran")
++        ),
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "optimized_attention",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("attention reran")
++        ),
++    )
++
++    def miss_static(linear, value, mode):
++        calls.append(("static", mode, value.shape))
++        return None
++
++    monkeypatch.setattr(minimax_model, "try_nvfp4_linear", miss_static)
++    original_forward = attention.out_proj.forward
++
++    def stock_forward(value):
++        calls.append(("stock", value.shape))
++        return original_forward(value)
++
++    monkeypatch.setattr(attention.out_proj, "forward", stock_forward)
++    options = {
++        "optimized_attention_override": override,
++        "minimax_h3_q_rms_rope_int8": Producer(),
++        "minimax_h3_linear_nvfp4_fusion": "auto",
++    }
++    with torch.no_grad():
++        actual = attention._forward_projected(
++            qkv, rope_freqs=rope, transformer_options=options
++        )
++
++    assert actual.shape == (3, 4)
++    assert calls == [
++        "preflight",
++        "attention",
++        ("static", "static", torch.Size((3, 4))),
++        ("stock", torch.Size((3, 4))),
++    ]
++    assert options["minimax_h3_linear_nvfp4_fusion"] == "auto"
++
++
++def test_static_q_route_requires_owned_marker_without_projection_replay(monkeypatch):
++    attention = _attention()
++    qkv, rope = _q_inputs()
++    override = object()
++
++    class Producer:
++        owner = override
++
++        def can_call(self, *args, **kwargs):
++            return True
++
++        def __call__(self, *args, **kwargs):
++            return torch.empty((1, 3, 4), dtype=torch.bfloat16), object()
++
++    monkeypatch.setattr(
++        minimax_model, "can_static_linear_for_output", lambda *args: True
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.model_management, "cast_to", lambda value, **kwargs: value
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "_h3_linear",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("projection ran")
++        ),
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "optimized_attention",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("attention reran")
++        ),
++    )
++    options = {
++        "optimized_attention_override": override,
++        "minimax_h3_q_rms_rope_int8": Producer(),
++        "minimax_h3_linear_nvfp4_fusion": "auto",
++    }
++    with torch.no_grad(), pytest.raises(RuntimeError, match="provenance marker"):
++        attention._forward_projected(
++            qkv, rope_freqs=rope, transformer_options=options
++        )
++
++
++@pytest.mark.parametrize(
++    "candidate",
++    [
++        torch.empty((1, 3, 4), dtype=torch.float32),
++        torch.empty((1, 3, 5), dtype=torch.bfloat16),
++        torch.empty((1, 3, 8), dtype=torch.bfloat16)[:, :, ::2],
++        torch.empty((1, 3, 4), dtype=torch.bfloat16, requires_grad=True),
++    ],
++    ids=("dtype", "shape", "contiguous", "requires-grad"),
++)
++def test_static_q_route_rejects_invalid_output_without_replay(monkeypatch, candidate):
++    attention = _attention()
++    qkv, rope = _q_inputs()
++    override = object()
++
++    class Producer:
++        owner = override
++
++        def can_call(self, *args, **kwargs):
++            return True
++
++        def __call__(self, *args, **kwargs):
++            bits = torch.tensor([1], dtype=torch.int32)
++            return candidate, minimax_model.H3AttentionAmaxMarker(bits, self)
++
++    monkeypatch.setattr(
++        minimax_model, "can_static_linear_for_output", lambda *args: True
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.model_management, "cast_to", lambda value, **kwargs: value
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "_h3_linear",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("projection ran")
++        ),
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "optimized_attention",
++        lambda *args, **kwargs: (_ for _ in ()).throw(
++            AssertionError("attention reran")
++        ),
++    )
++    options = {
++        "optimized_attention_override": override,
++        "minimax_h3_q_rms_rope_int8": Producer(),
++        "minimax_h3_linear_nvfp4_fusion": "auto",
++    }
++    with torch.no_grad(), pytest.raises(
++        RuntimeError, match="invalid static projection input"
++    ):
++        attention._forward_projected(
++            qkv, rope_freqs=rope, transformer_options=options
++        )
++
++
++@pytest.mark.parametrize(
++    "blocked_options",
++    [
++        {"patches": {"attn1_patch": [object()]}},
++        {"patches_replace": {"dit": {("double_block", 0): object()}}},
++    ],
++    ids=("patches", "patches-replace"),
++)
++def test_static_q_route_rejects_patches_before_q_mutation(
++    monkeypatch, blocked_options
++):
++    attention = _attention()
++    qkv, rope = _q_inputs()
++    override = object()
++    calls = []
++
++    class Producer:
++        owner = override
++
++        def can_call(self, *args, **kwargs):
++            raise AssertionError("Q producer preflight ran")
++
++        def __call__(self, *args, **kwargs):
++            raise AssertionError("Q producer mutated inputs")
++
++    monkeypatch.setattr(
++        minimax_model, "can_static_linear_for_output", lambda *args: True
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.model_management, "cast_to", lambda value, **kwargs: value
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.quant_ops.ck,
++        "rms_rope_split_half_",
++        lambda *args, **kwargs: calls.append("stock-transform"),
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "optimized_attention",
++        lambda q, k, v, heads, **kwargs: calls.append("stock-attention") or v,
++    )
++    monkeypatch.setattr(
++        minimax_model, "_h3_linear", lambda linear, value, options: value.squeeze(0)
++    )
++    options = {
++        "optimized_attention_override": override,
++        "minimax_h3_q_rms_rope_int8": Producer(),
++        "minimax_h3_linear_nvfp4_fusion": "auto",
++        **blocked_options,
++    }
++    with torch.no_grad():
++        attention._forward_projected(qkv, rope_freqs=rope, transformer_options=options)
++    assert calls == ["stock-transform", "stock-attention"]
++
++
++def test_static_preflight_miss_uses_stock_before_q_mutation(monkeypatch):
++    attention = _attention()
++    qkv, rope = _q_inputs()
++    override = object()
++    calls = []
++
++    class Producer:
++        owner = override
++
++        def can_call(self, *args, **kwargs):
++            raise AssertionError("Q producer preflight ran")
++
++        def __call__(self, *args, **kwargs):
++            raise AssertionError("Q producer mutated inputs")
++
++    monkeypatch.setattr(
++        minimax_model, "can_static_linear_for_output", lambda *args: False
++    )
++    monkeypatch.setattr(
++        minimax_model, "can_linear_from_amax_bits_for_output", lambda *args: False
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.model_management, "cast_to", lambda value, **kwargs: value
++    )
++    monkeypatch.setattr(
++        minimax_model.comfy.quant_ops.ck,
++        "rms_rope_split_half_",
++        lambda *args, **kwargs: calls.append("stock-transform"),
++    )
++    monkeypatch.setattr(
++        minimax_model,
++        "optimized_attention",
++        lambda q, k, v, heads, **kwargs: calls.append("stock-attention") or v,
++    )
++    monkeypatch.setattr(
++        minimax_model, "_h3_linear", lambda linear, value, options: value.squeeze(0)
++    )
++    options = {
++        "optimized_attention_override": override,
++        "minimax_h3_q_rms_rope_int8": Producer(),
++        "minimax_h3_linear_nvfp4_fusion": "auto",
++    }
++    with torch.no_grad():
++        attention._forward_projected(qkv, rope_freqs=rope, transformer_options=options)
++    assert calls == ["stock-transform", "stock-attention"]
+diff --git a/tests/test_minimax_h3_swiglu_nvfp4.py b/tests/test_minimax_h3_swiglu_nvfp4.py
+index 813bb3f..3e0bcb3 100644
+--- a/tests/test_minimax_h3_swiglu_nvfp4.py
++++ b/tests/test_minimax_h3_swiglu_nvfp4.py
+@@ -83,6 +83,10 @@ def test_static_scale_requires_exact_shape_dtype_and_marker():
+         _h3_nvfp4_fusion_enabled=True,
+         _h3_nvfp4_allowed_shapes=frozenset({(17, 14336)}),
+         _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
++        _h3_nvfp4_plan_hook_ids=(1, 2),
++        _forward_pre_hooks={1: object()},
++        _forward_hooks={2: object()},
++        _forward_hooks_always_called={2},
+     )
+     linear._h3_nvfp4_validated_input_scale = linear.input_scale
+     assert swiglu_nvfp4._static_scale(linear, x) is linear.input_scale
+@@ -103,6 +107,10 @@ def test_static_scale_requires_producer_certified_tensor_identity():
+         _h3_nvfp4_allowed_shapes=frozenset({(17, 14336)}),
+         _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
+         _h3_nvfp4_validated_input_scale=torch.tensor(0.25, dtype=torch.float32),
++        _h3_nvfp4_plan_hook_ids=(1, 2),
++        _forward_pre_hooks={1: object()},
++        _forward_hooks={2: object()},
++        _forward_hooks_always_called={2},
+     )
+     assert swiglu_nvfp4._static_scale(linear, x) is None
+ 
+@@ -176,6 +184,10 @@ def test_global_forward_hooks_disable_direct_fusion_routes():
+         _h3_nvfp4_allowed_shapes=frozenset({(17, 14336)}),
+         _h3_nvfp4_allowed_dtypes=frozenset({str(torch.bfloat16)}),
+         _h3_nvfp4_validated_input_scale=scale,
++        _h3_nvfp4_plan_hook_ids=(1, 2),
++        _forward_pre_hooks={1: object()},
++        _forward_hooks={2: object()},
++        _forward_hooks_always_called={2},
+     )
+     handle = torch.nn.modules.module.register_module_forward_hook(
+         lambda _module, _args, _output: None

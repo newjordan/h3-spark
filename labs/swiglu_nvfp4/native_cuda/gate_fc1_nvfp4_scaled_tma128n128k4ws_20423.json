@@ -1,0 +1,30 @@
+{
+  "clone8_full_min_ms": 68.3289,
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "Kitchen 128x128x256 12-warp launch: 4 producer warps issue A/B/SFA/SFB TMA; 8 MMA warps keep the m16n8k64 atom and 16x4 acc. 88064 B dynamic smem. Same tile as the 8-warp clone (already byte-exact).",
+  "k": 5376,
+  "kitchen_gemm_min_ms": 20.134,
+  "launch": {
+    "dynamic_smem": 88064,
+    "local_size_bytes": 8,
+    "max_dynamic_shared_size_bytes": 88064,
+    "mma_warps": 8,
+    "num_regs": 150,
+    "producer_warps": 4,
+    "shared_size_bytes": 0,
+    "smem_struct_bytes": 73856,
+    "threads": 384,
+    "warps": 12
+  },
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_clone8_ms": 0.9203,
+  "vs_kitchen_ms": -47.2746,
+  "ws_full_min_ms": 67.4086,
+  "ws_vs_clone8_max_abs": 0.0,
+  "ws_vs_clone8_mismatches": 0,
+  "ws_vs_kitchen_max_abs": 0.0,
+  "ws_vs_kitchen_mismatches": 0
+}

@@ -1,0 +1,17 @@
+{
+  "device": "NVIDIA GB10",
+  "fused_min_ms": 10.2939,
+  "fused_vs_eager_q": 0,
+  "fused_vs_eager_s": 0,
+  "fused_vs_eager_scale_exact": true,
+  "fused_vs_twopass_q": 0,
+  "fused_vs_twopass_s": 0,
+  "fused_vs_twopass_scale_exact": true,
+  "identity": "bound-filtered 8-wide amax + 8-wide pack-from-amax-bits; no 558 MiB store",
+  "pass": true,
+  "projected_s_per_20_step": 0.5105,
+  "rows": 20423,
+  "saved_ms": 0.5105,
+  "twopass_min_ms": 10.8044,
+  "width": 28672
+}

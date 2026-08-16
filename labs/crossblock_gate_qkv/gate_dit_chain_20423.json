@@ -1,0 +1,20 @@
+{
+  "adapter_chain_min_ms": 223.1577,
+  "adapter_minus_stock_ms": -39.8362,
+  "adapter_projected_s_per_20_eval": -0.7967,
+  "device": "NVIDIA GB10",
+  "fused_native_chain_min_ms": 220.1395,
+  "g_mismatches": 0,
+  "identity": "49-transition DiT residual chain at S=20423: stock gate+rms vs fused gate_rms vs sealed adapter defer+try",
+  "kernel_projection_s": 0.511881,
+  "native_projected_s_per_20_eval": 0.8571,
+  "native_saved_ms": 42.8544,
+  "pass": true,
+  "q_mismatches": 0,
+  "residual_mismatches": 0,
+  "rows": 20423,
+  "s_mismatches": 0,
+  "stock_chain_min_ms": 262.9939,
+  "transitions": 49,
+  "width": 5376
+}

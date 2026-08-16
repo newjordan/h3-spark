@@ -1,0 +1,51 @@
+{
+  "capability": [
+    12,
+    1
+  ],
+  "cuda": "13.0",
+  "default_stream": {
+    "adapter_global_mismatches": 0,
+    "adapter_q_mismatches": 0,
+    "adapter_residual_mismatches": 0,
+    "adapter_scale_mismatches": 0,
+    "adapter_version_delta": 1,
+    "failures": [],
+    "materialize_mismatches": 0,
+    "materialize_state": "materialized",
+    "pass": true,
+    "producer_global_mismatches": 0,
+    "producer_q_mismatches": 0,
+    "producer_residual_mismatches": 0,
+    "producer_rstd_mismatches": 0,
+    "producer_scale_mismatches": 0,
+    "producer_version_delta": 1,
+    "stream": 0
+  },
+  "device": "NVIDIA GB10",
+  "gate_native_sha256": "92fbb3f5f6f5d64c17a51ce48db336709d22fbe8bdc538c303b7fed9c69540ec",
+  "nondefault_stream": {
+    "adapter_global_mismatches": 0,
+    "adapter_q_mismatches": 0,
+    "adapter_residual_mismatches": 0,
+    "adapter_scale_mismatches": 0,
+    "adapter_version_delta": 1,
+    "failures": [],
+    "materialize_mismatches": 0,
+    "materialize_state": "materialized",
+    "pass": true,
+    "producer_global_mismatches": 0,
+    "producer_q_mismatches": 0,
+    "producer_residual_mismatches": 0,
+    "producer_rstd_mismatches": 0,
+    "producer_scale_mismatches": 0,
+    "producer_version_delta": 1,
+    "stream": 198432388320064
+  },
+  "pass": true,
+  "rms_native_sha256": "1038f12df9ebec597cf00f50511c32b088f14799fd2a0833dd8659b7ea1e4955",
+  "rows": 20423,
+  "torch": "2.13.0+cu130",
+  "wall_seconds": 1.567,
+  "width": 5376
+}

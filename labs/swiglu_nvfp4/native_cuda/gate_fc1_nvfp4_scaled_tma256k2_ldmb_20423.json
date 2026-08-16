@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "ldmatrix.x4 B on k2 (256x64 K=128) pairs two 8-N subtiles via the A-fragment map == kitchen == scalar k2.",
+  "k": 5376,
+  "k2_full_min_ms": 40.1911,
+  "kitchen_gemm_min_ms": 20.2815,
+  "ldmb_full_min_ms": 39.4436,
+  "ldmb_vs_k2_mismatches": 0,
+  "ldmb_vs_kitchen_mismatches": 0,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_k2_ms": 0.7475,
+  "vs_kitchen_ms": -19.1621
+}

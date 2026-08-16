@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "ldmatrix.x4 from smem[lane&15][(lane>>4)*16] == kitchen group/tidg A fragment on 128x128x256. Probe 0/32. Not the unit-scale consecutive-K uint4 map (that skips ldmatrix redistribute).",
+  "k": 5376,
+  "kitchen_gemm_min_ms": 20.3012,
+  "ldm_full_min_ms": 67.9157,
+  "ldm_vs_kitchen_mismatches": 0,
+  "ldm_vs_linear_mismatches": 0,
+  "linear_full_min_ms": 67.9085,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_kitchen_ms": -47.6145,
+  "vs_linear_ms": -0.0072
+}

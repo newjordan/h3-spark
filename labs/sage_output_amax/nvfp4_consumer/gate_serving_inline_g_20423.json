@@ -1,0 +1,16 @@
+{
+  "identity": "Serving swiglu_nvfp4_dynamic is now 8-wide amax + 8-wide pack with G inlined from amax bits. No finalize_dynamic_scale<<<1,1>>>. Same Python entrypoint. Bytes match the pre-change serving .so and eager kitchen. Isolated 11.006 -> 10.817 ms. Installed over comfy/ldm/minimax/swiglu_nvfp4_native_v1.so; rollback is .bak-pre-vec (sha 45b21fe1).",
+  "device": "NVIDIA GB10",
+  "rows": 20423,
+  "new_vs_old_q": 0,
+  "new_vs_old_s": 0,
+  "new_vs_old_g_bits": true,
+  "new_vs_kitchen_q": 0,
+  "new_vs_kitchen_s": 0,
+  "new_vs_kitchen_g_bits": true,
+  "old_min_ms": 11.006,
+  "new_min_ms": 10.8166,
+  "old_g": 0.006500244140625,
+  "new_g": 0.006500244140625,
+  "pass": true
+}

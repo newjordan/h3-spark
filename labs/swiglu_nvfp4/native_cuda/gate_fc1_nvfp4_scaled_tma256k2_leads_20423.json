@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "leader-only SFA/SFB on k2 (256x64 K=128): scale_vec::4X selectors {0,0} read 16 SFA + 8 SFB lanes; others 0 == kitchen == scalar k2.",
+  "k": 5376,
+  "k2_full_min_ms": 39.226,
+  "kitchen_gemm_min_ms": 19.4048,
+  "leads_full_min_ms": 39.8251,
+  "leads_vs_k2_mismatches": 0,
+  "leads_vs_kitchen_mismatches": 0,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_k2_ms": -0.5991,
+  "vs_kitchen_ms": -20.4203
+}

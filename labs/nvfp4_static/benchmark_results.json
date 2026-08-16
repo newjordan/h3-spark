@@ -1,0 +1,36 @@
+{
+  "device": "NVIDIA GB10",
+  "capability": [12, 1],
+  "torch": "2.13.0+cu130",
+  "python": "3.13.12",
+  "rows": 20393,
+  "results": [
+    {
+      "shape": [20393, 5376],
+      "layers_per_h3_forward": 100,
+      "median_ms": 2.666864037513733,
+      "estimated_h3_forward_ms": 266.6864037513733
+    },
+    {
+      "shape": [20393, 7168],
+      "layers_per_h3_forward": 50,
+      "median_ms": 3.518175959587097,
+      "estimated_h3_forward_ms": 175.90879797935486
+    },
+    {
+      "shape": [20393, 14336],
+      "layers_per_h3_forward": 50,
+      "median_ms": 7.062864065170288,
+      "estimated_h3_forward_ms": 353.1432032585144
+    }
+  ],
+  "estimated_abs_amax_ms_per_h3_forward": 795.7384049892426,
+  "estimated_abs_amax_seconds_for_20_steps": 15.914768099784851,
+  "existing_full_forward_profile": {
+    "self_cuda_ms": 12294.0,
+    "abs_kernel_ms": 548.514,
+    "amax_reduce_kernel_ms": 288.749,
+    "abs_plus_reduce_ms": 837.263,
+    "abs_plus_reduce_fraction": 0.06810476655278997
+  }
+}

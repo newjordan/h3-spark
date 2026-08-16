@@ -1,0 +1,64 @@
+--- a/comfy/ldm/minimax/gate_rms_adaln_nvfp4_static.py
++++ b/comfy/ldm/minimax/gate_rms_adaln_nvfp4_static.py
+@@ -29,7 +29,7 @@
+     _norm_eligible,
+     _tensor_inputs_eligible,
+ )
+-from comfy.ldm.minimax.swiglu_nvfp4 import BRIDGE_ATTRS, HOOK_ATTRS, NVFP4_LAYOUT
++from comfy.ldm.minimax.swiglu_nvfp4 import BRIDGE_ATTRS, NVFP4_LAYOUT
+ from comfy.ops import cast_bias_weight, run_every_op, uncast_bias_weight
+ from comfy.quant_ops import QuantizedTensor, TensorCoreNVFP4Layout
+ 
+@@ -134,10 +134,6 @@
+     )
+ 
+ 
+-def _linear_has_hooks(linear) -> bool:
+-    return any(bool(getattr(linear, name, None)) for name in HOOK_ATTRS)
+-
+-
+ def _bridge_state(linear) -> str:
+     present = tuple(hasattr(linear, name) for name in BRIDGE_ATTRS)
+     if not any(present):
+@@ -161,7 +157,6 @@
+         and _gate_inputs_eligible(x, other, gate, scale, shift, row_ids)
+         and _norm_eligible(norm, x)
+         and _linear_eligible(linear, x)
+-        and not _linear_has_hooks(linear)
+     )
+ 
+ 
+@@ -244,7 +239,10 @@
+     mutation_started = False
+     try:
+         if (
+-            not _cast_norm_weight_eligible(norm_weight, norm_bias, x)
++            not _preflight_eligible(
++                owner, linear, norm, x, other, gate, scale, shift, row_ids
++            )
++            or not _cast_norm_weight_eligible(norm_weight, norm_bias, x)
+             or not _storage_disjoint(x, norm_weight, input_scale)
+             or _bridge_state(linear) != "complete"
+             or _static_scale(linear, x) is not input_scale
+@@ -277,11 +275,19 @@
+     )
+     try:
+         if (
+-            not isinstance(weight, QuantizedTensor)
++            _bridge_state(linear) != "complete"
++            or getattr(owner, "fc1", None) is not linear
++            or not parent_eligible(owner)
++            or not _norm_eligible(norm, x)
++            or not _linear_eligible(linear, x)
++            or _static_scale(linear, x) is not input_scale
++            or not isinstance(weight, QuantizedTensor)
+             or weight._layout_cls != NVFP4_LAYOUT
+             or getattr(weight._params, "transposed", False)
+         ):
+-            raise RuntimeError("FC1 weight changed after static gate mutation")
++            raise RuntimeError(
++                "FC1 eligibility/hook/owner/weight changed after static gate mutation"
++            )
+         params = TensorCoreNVFP4Layout.Params(
+             scale=input_scale,
+             orig_dtype=x.dtype,

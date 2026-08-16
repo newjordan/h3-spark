@@ -1,0 +1,36 @@
+{
+  "native_abi": 1,
+  "native_build_id": "h3-rms-adaln-nvfp4-static-register-sm12-v1",
+  "results": [
+    {
+      "activation_traffic_saved_bytes_vs_dynamic_v2": 2774532,
+      "byte_exact": true,
+      "eps": 1e-05,
+      "modulation_dtype": "torch.float32",
+      "nondefault_stream": true,
+      "one_pass_static_ms": 0.026688000187277794,
+      "packed_byte_mismatches": 0,
+      "rows": 129,
+      "rstd_byte_mismatches": 0,
+      "scale_byte_mismatches": 0,
+      "speedup": 1.2505995423928695,
+      "staged_static_ms": 0.033376000821590424,
+      "width": 5376
+    },
+    {
+      "activation_traffic_saved_bytes_vs_dynamic_v2": 2774532,
+      "byte_exact": true,
+      "eps": 1e-05,
+      "modulation_dtype": "torch.bfloat16",
+      "nondefault_stream": true,
+      "one_pass_static_ms": 0.027103999629616737,
+      "packed_byte_mismatches": 0,
+      "rows": 129,
+      "rstd_byte_mismatches": 0,
+      "scale_byte_mismatches": 0,
+      "speedup": 1.2066115657043206,
+      "staged_static_ms": 0.03270399942994118,
+      "width": 5376
+    }
+  ]
+}

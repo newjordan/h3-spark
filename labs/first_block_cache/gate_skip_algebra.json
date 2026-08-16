@@ -1,0 +1,955 @@
+{
+  "identity": "H3 block-0 residual(t) is F(x_t, t_emb_t), not a function of residual(t-1) plus timestep, modulation, or a cheap residual delta. Copy / gate-scale / input-delta reconstructions are not byte-exact once x or t_emb moves. residual_delta==0 is tautological and requires residual(t). Serving cache tail add first+(full-first) is not byte-exact even on replay: bf16 a+(b-a) is not an involution. fp32 tail add is involutive on replay and still misses once x or t moves. The 0.08 threshold is not an exact predicate.",
+  "device": "NVIDIA GB10",
+  "seed": 26081343,
+  "dtype": "bfloat16",
+  "cache_source": "$HOME/comfyui-h3-current/comfy/ldm/minimax/first_block_cache.py",
+  "serving_default": {
+    "H3_CROSS_STEP_CACHE": "off",
+    "node_cross_step_cache": "off",
+    "unchanged": true
+  },
+  "geometries": [
+    {
+      "label": "small_s129",
+      "rows": 129,
+      "hidden": 64,
+      "replay_residual_exact": true,
+      "replay_full_copy_exact": true,
+      "replay_bf16_tail_exact": false,
+      "replay_fp32_tail_exact": true,
+      "replay_bf16_involution_diff": 32,
+      "replay_fp32_involution_diff": 0,
+      "tiny_x_actually_moved": true,
+      "moved_both_copy_diff": 3009,
+      "same_t_moved_x_copy_diff": 2903,
+      "same_x_moved_t_copy_diff": 792,
+      "cheap_predicate_false_hits": [
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicate": "cache_threshold"
+        }
+      ],
+      "nontrivial_residual_delta_zero": false,
+      "pairs": [
+        {
+          "pair": "replay",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": true,
+            "first_out_equal": true,
+            "state_equal": true,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.0,
+          "rel_mean_abs_full": 0.0,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 0,
+            "gate_mean_scale": 0,
+            "per_row_gate_msa": 7761,
+            "add_input_delta": 0
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 32,
+            "cache_tail_add_fp32": 0,
+            "copy_prev_full": 0,
+            "first_out_only": 6486,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": false,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": false,
+            "first_out_and_t_cache_tail": false,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.09332510083913803,
+          "rel_mean_abs_full": 0.05023854225873947,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 2903,
+            "gate_mean_scale": 2903,
+            "per_row_gate_msa": 9132,
+            "add_input_delta": 14395
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 2219,
+            "cache_tail_add_fp32": 2221,
+            "copy_prev_full": 8762,
+            "first_out_only": 6497,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.017666175961494446,
+          "rel_mean_abs_full": 0.0003071665414609015,
+          "gate_msa_mean_ratio": 1.0002527866995867,
+          "residual_recon_byte_diff": {
+            "copy_prev": 792,
+            "gate_mean_scale": 792,
+            "per_row_gate_msa": 10452,
+            "add_input_delta": 792
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 703,
+            "cache_tail_add_fp32": 695,
+            "copy_prev_full": 1092,
+            "first_out_only": 6487,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": false,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        },
+        {
+          "pair": "moved_both",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.09778393805027008,
+          "rel_mean_abs_full": 0.04990788549184799,
+          "gate_msa_mean_ratio": 1.0002527866995867,
+          "residual_recon_byte_diff": {
+            "copy_prev": 3009,
+            "gate_mean_scale": 3009,
+            "per_row_gate_msa": 11007,
+            "add_input_delta": 14307
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 2270,
+            "cache_tail_add_fp32": 2269,
+            "copy_prev_full": 8785,
+            "first_out_only": 6420,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.00010028908582171425,
+          "rel_mean_abs_full": 3.737603037734516e-06,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 8,
+            "gate_mean_scale": 8,
+            "per_row_gate_msa": 7766,
+            "add_input_delta": 10
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 42,
+            "cache_tail_add_fp32": 11,
+            "copy_prev_full": 20,
+            "first_out_only": 6487,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.01777607761323452,
+          "rel_mean_abs_full": 0.0003089949022978544,
+          "gate_msa_mean_ratio": 1.0002527866995867,
+          "residual_recon_byte_diff": {
+            "copy_prev": 792,
+            "gate_mean_scale": 792,
+            "per_row_gate_msa": 10452,
+            "add_input_delta": 794
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 699,
+            "cache_tail_add_fp32": 694,
+            "copy_prev_full": 1087,
+            "first_out_only": 6488,
+            "bf16_involution": 32,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 8256,
+          "full_elems": 8256
+        }
+      ]
+    },
+    {
+      "label": "small_s20423",
+      "rows": 20423,
+      "hidden": 64,
+      "replay_residual_exact": true,
+      "replay_full_copy_exact": true,
+      "replay_bf16_tail_exact": false,
+      "replay_fp32_tail_exact": true,
+      "replay_bf16_involution_diff": 3681,
+      "replay_fp32_involution_diff": 0,
+      "tiny_x_actually_moved": true,
+      "moved_both_copy_diff": 442132,
+      "same_t_moved_x_copy_diff": 425184,
+      "same_x_moved_t_copy_diff": 128600,
+      "cheap_predicate_false_hits": [
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicate": "cache_threshold"
+        }
+      ],
+      "nontrivial_residual_delta_zero": false,
+      "pairs": [
+        {
+          "pair": "replay",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": true,
+            "first_out_equal": true,
+            "state_equal": true,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.0,
+          "rel_mean_abs_full": 0.0,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 0,
+            "gate_mean_scale": 0,
+            "per_row_gate_msa": 1229430,
+            "add_input_delta": 0
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 3681,
+            "cache_tail_add_fp32": 0,
+            "copy_prev_full": 0,
+            "first_out_only": 992481,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": false,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": false,
+            "first_out_and_t_cache_tail": false,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.09126994013786316,
+          "rel_mean_abs_full": 0.050038911402225494,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 425184,
+            "gate_mean_scale": 425184,
+            "per_row_gate_msa": 1426682,
+            "add_input_delta": 2281285
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 322990,
+            "cache_tail_add_fp32": 322995,
+            "copy_prev_full": 1390968,
+            "first_out_only": 992871,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.02150728739798069,
+          "rel_mean_abs_full": 0.0003398752014618367,
+          "gate_msa_mean_ratio": 0.998541831527275,
+          "residual_recon_byte_diff": {
+            "copy_prev": 128600,
+            "gate_mean_scale": 128600,
+            "per_row_gate_msa": 1631991,
+            "add_input_delta": 128600
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 115549,
+            "cache_tail_add_fp32": 115206,
+            "copy_prev_full": 179007,
+            "first_out_only": 993079,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": false,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        },
+        {
+          "pair": "moved_both",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.09596613794565201,
+          "rel_mean_abs_full": 0.050095897167921066,
+          "gate_msa_mean_ratio": 0.998541831527275,
+          "residual_recon_byte_diff": {
+            "copy_prev": 442132,
+            "gate_mean_scale": 442132,
+            "per_row_gate_msa": 1704226,
+            "add_input_delta": 2281984
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 336723,
+            "cache_tail_add_fp32": 336742,
+            "copy_prev_full": 1391281,
+            "first_out_only": 993460,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 1.3442161161947297e-07,
+          "rel_mean_abs_full": 6.744938829683633e-09,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 5,
+            "gate_mean_scale": 5,
+            "per_row_gate_msa": 1229432,
+            "add_input_delta": 7
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 3689,
+            "cache_tail_add_fp32": 8,
+            "copy_prev_full": 12,
+            "first_out_only": 992482,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.021507464349269867,
+          "rel_mean_abs_full": 0.0003398679255042225,
+          "gate_msa_mean_ratio": 0.998541831527275,
+          "residual_recon_byte_diff": {
+            "copy_prev": 128602,
+            "gate_mean_scale": 128602,
+            "per_row_gate_msa": 1631990,
+            "add_input_delta": 128604
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 115551,
+            "cache_tail_add_fp32": 115208,
+            "copy_prev_full": 179004,
+            "first_out_only": 993077,
+            "bf16_involution": 3681,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 1307072,
+          "full_elems": 1307072
+        }
+      ]
+    },
+    {
+      "label": "prod_width_s129",
+      "rows": 129,
+      "hidden": 5376,
+      "replay_residual_exact": true,
+      "replay_full_copy_exact": true,
+      "replay_bf16_tail_exact": false,
+      "replay_fp32_tail_exact": true,
+      "replay_bf16_involution_diff": 906,
+      "replay_fp32_involution_diff": 0,
+      "tiny_x_actually_moved": true,
+      "moved_both_copy_diff": 180078,
+      "same_t_moved_x_copy_diff": 169926,
+      "same_x_moved_t_copy_diff": 55786,
+      "cheap_predicate_false_hits": [
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "t_emb_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "modulation_equal"
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicate": "cache_threshold"
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicate": "cache_threshold"
+        }
+      ],
+      "nontrivial_residual_delta_zero": false,
+      "pairs": [
+        {
+          "pair": "replay",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": true,
+            "first_out_equal": true,
+            "state_equal": true,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.0,
+          "rel_mean_abs_full": 0.0,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 0,
+            "gate_mean_scale": 0,
+            "per_row_gate_msa": 535972,
+            "add_input_delta": 0
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 906,
+            "cache_tail_add_fp32": 0,
+            "copy_prev_full": 0,
+            "first_out_only": 379729,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": false,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": false,
+            "first_out_and_t_cache_tail": false,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        },
+        {
+          "pair": "same_t_moved_x",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.12017325311899185,
+          "rel_mean_abs_full": 0.050087735056877136,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 169926,
+            "gate_mean_scale": 169926,
+            "per_row_gate_msa": 624797,
+            "add_input_delta": 1231705
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 117536,
+            "cache_tail_add_fp32": 117544,
+            "copy_prev_full": 738104,
+            "first_out_only": 379831,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        },
+        {
+          "pair": "same_x_moved_t",
+          "predicates": {
+            "input_equal": true,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.03480205312371254,
+          "rel_mean_abs_full": 0.00022763806919101626,
+          "gate_msa_mean_ratio": 1.000415721630193,
+          "residual_recon_byte_diff": {
+            "copy_prev": 55786,
+            "gate_mean_scale": 55786,
+            "per_row_gate_msa": 721972,
+            "add_input_delta": 55786
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 45700,
+            "cache_tail_add_fp32": 45638,
+            "copy_prev_full": 73673,
+            "first_out_only": 379956,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": false,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        },
+        {
+          "pair": "moved_both",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": false
+          },
+          "rel_mean_abs": 0.12961329519748688,
+          "rel_mean_abs_full": 0.05007250979542732,
+          "gate_msa_mean_ratio": 1.000415721630193,
+          "residual_recon_byte_diff": {
+            "copy_prev": 180078,
+            "gate_mean_scale": 180078,
+            "per_row_gate_msa": 757956,
+            "add_input_delta": 1230779
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 124942,
+            "cache_tail_add_fp32": 124946,
+            "copy_prev_full": 737129,
+            "first_out_only": 379533,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": true
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        },
+        {
+          "pair": "tiny_x_same_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": true,
+            "modulation_equal": true,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.00037232277099974453,
+          "rel_mean_abs_full": 6.7152986957808025e-06,
+          "gate_msa_mean_ratio": 1.0,
+          "residual_recon_byte_diff": {
+            "copy_prev": 888,
+            "gate_mean_scale": 888,
+            "per_row_gate_msa": 536411,
+            "add_input_delta": 890
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 4025,
+            "cache_tail_add_fp32": 3393,
+            "copy_prev_full": 3960,
+            "first_out_only": 379714,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": false,
+            "modulation_only_copy": false,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        },
+        {
+          "pair": "tiny_x_moved_t",
+          "predicates": {
+            "input_equal": false,
+            "t_emb_equal": false,
+            "modulation_equal": false,
+            "residual_delta_zero": false,
+            "first_out_equal": false,
+            "state_equal": false,
+            "cache_threshold": true
+          },
+          "rel_mean_abs": 0.034805264323949814,
+          "rel_mean_abs_full": 0.00022742731380276382,
+          "gate_msa_mean_ratio": 1.000415721630193,
+          "residual_recon_byte_diff": {
+            "copy_prev": 55781,
+            "gate_mean_scale": 55781,
+            "per_row_gate_msa": 721981,
+            "add_input_delta": 55783
+          },
+          "full_recon_byte_diff": {
+            "cache_tail_add": 45760,
+            "cache_tail_add_fp32": 45713,
+            "copy_prev_full": 73609,
+            "first_out_only": 379988,
+            "bf16_involution": 906,
+            "fp32_involution": 0
+          },
+          "sound": {
+            "state_equal_copy_residual": true,
+            "state_equal_cache_tail": true,
+            "residual_delta_zero_copy": true,
+            "t_emb_only_copy": true,
+            "modulation_only_copy": true,
+            "input_only_copy": true,
+            "residual_delta_zero_cache_tail": true,
+            "first_out_and_t_cache_tail": true,
+            "first_out_and_t_fp32_tail": true,
+            "cache_threshold_cache_tail": false
+          },
+          "residual_elems": 693504,
+          "full_elems": 693504
+        }
+      ]
+    }
+  ],
+  "algebra": {
+    "block0": "residual = gate_msa*Attn(AdaLN(x,t)) + gate_mlp*MLP(AdaLN(x+attn_res,t))",
+    "depends_on": [
+      "x",
+      "t_emb"
+    ],
+    "not_a_function_of": [
+      "residual(t-1) + timestep",
+      "residual(t-1) + modulation",
+      "residual(t-1) * gate_ratio",
+      "residual(t-1) + (x_t - x_{t-1})"
+    ],
+    "exact_fail_closed_predicate": "x bits equal AND t_emb bits equal (duplicate forward); then copy the previous residual/full, do not add a bf16 tail",
+    "residual_delta_zero": "tautology; requires residual(t)",
+    "serving_bf16_tail": "first+(full-first) is not involutive; not byte-exact on replay",
+    "fp32_tail": "involutive on replay; still not a skip once x or t_emb moves",
+    "serving_threshold_0p08": "approximation; not byte-exact"
+  },
+  "decision": "no_exact_skip",
+  "promoted": false,
+  "serving_patched": false,
+  "default_changed": false,
+  "pass": true
+}

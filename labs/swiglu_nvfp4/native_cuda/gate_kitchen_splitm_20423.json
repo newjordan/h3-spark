@@ -1,0 +1,23 @@
+{
+  "amax_in_l2_ms": 11.7368,
+  "bit_max": 16910,
+  "device": "NVIDIA GB10",
+  "g_assoc": 0.01318359375,
+  "g_assoc_vs_twopass_exact": true,
+  "g_two": 0.01318359375,
+  "identity": "Kitchen NVFP4 GEMM is M-independent: concat of 128-row panels == full GEMM. Amax bits associate over panels (max of per-panel L). Panel is 7 MiB; L2 is 24 MiB.",
+  "k": 5376,
+  "kitchen_full_min_ms": 23.089,
+  "l2_bytes": 25165824,
+  "n": 28672,
+  "panel_bytes": 7340032,
+  "panels": 160,
+  "pass": true,
+  "rows": 20423,
+  "split_gemm_amax_min_ms": 81.5571,
+  "split_gemm_min_ms": 69.8203,
+  "split_vs_full_mismatches": 0,
+  "tile_m": 128,
+  "twopass_min_ms": 11.3689,
+  "vs_full_gemm_ms": -46.7313
+}

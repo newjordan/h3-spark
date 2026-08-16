@@ -1,0 +1,38 @@
+{
+  "attention": "sage2-quality",
+  "cross_step_cache": "off",
+  "crossblock_gate_qkv_fusion": "auto",
+  "decision": "live_ok_hold_default",
+  "frames": 124,
+  "height": 480,
+  "host": "dgx-spark-host",
+  "modulation_fusion": "exact",
+  "nvfp4_scales": "dynamic",
+  "output_filename": "crossblock_auto_chef20_dyn_seed26081220_00001_.mp4",
+  "prompt_id": "9ddd0e26-cdab-40ef-83d7-00c8ce30328d",
+  "q_rms_rope_int8_fusion": "auto",
+  "reference_count": 6,
+  "rms_adaln_nvfp4_fusion": "auto",
+  "sampler_only_smoke": {
+    "executor_seconds": 46.8,
+    "prompt_id": "90bddce5-372c-4671-80c0-44bba39e5dfc",
+    "result": "success",
+    "steps": 2,
+    "tag": "crossblock_auto_smoke2",
+    "wall_seconds": 50.1
+  },
+  "seed": 26081220,
+  "static_attempt": {
+    "error": "Artifact architecture fingerprint does not match the selected model",
+    "prompt_id": "35d43461-d6cd-40a2-a909-73a09076a375",
+    "result": "error"
+  },
+  "steps": 20,
+  "swiglu_nvfp4_fusion": "auto",
+  "tag": "crossblock_auto_chef20_dyn",
+  "twenty_step_chef": {
+    "executor_seconds": 182.8,
+    "result": "success"
+  },
+  "width": 864
+}

@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GB10",
+  "identity": "amax writes eager silu(gate) over the dead gate half; pack multiplies silu*up only; no new 558 MiB workspace",
+  "inplace_min_ms": 13.3079,
+  "inplace_vs_eager_q": 0,
+  "inplace_vs_eager_s": 0,
+  "inplace_vs_eager_scale_exact": true,
+  "inplace_vs_twopass_q": 0,
+  "inplace_vs_twopass_s": 0,
+  "inplace_vs_twopass_scale_exact": true,
+  "pass": true,
+  "projected_s_per_20_step": -2.6296,
+  "rows": 20423,
+  "saved_ms": -2.6296,
+  "twopass_min_ms": 10.6783,
+  "vec_min_ms": 10.2363,
+  "width": 28672
+}

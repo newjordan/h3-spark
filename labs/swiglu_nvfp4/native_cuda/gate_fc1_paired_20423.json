@@ -1,0 +1,21 @@
+{
+  "device": "NVIDIA GB10",
+  "from_product_min_ms": 6.0791,
+  "from_product_vs_eager_q": 0,
+  "from_product_vs_eager_s": 0,
+  "from_product_vs_eager_scale_exact": true,
+  "from_product_vs_twopass_q": 0,
+  "from_product_vs_twopass_s": 0,
+  "from_product_vs_twopass_scale_exact": true,
+  "full_store_min_ms": 7725.439,
+  "identity": "paired-N MMA accumulates gate and up together; product epilogue stores eager round(silu(round(g))*round(u)); same mainloop as the [gate|up] store",
+  "k": 5376,
+  "n": 14336,
+  "pack_side_saved_ms": 4.7457,
+  "pass": true,
+  "product_store_min_ms": 7701.4268,
+  "product_vs_eager_full_mismatches": 0,
+  "rows": 20423,
+  "store_delta_ms": 24.0122,
+  "twopass_min_ms": 10.8248
+}

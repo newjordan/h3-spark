@@ -1,0 +1,40 @@
+--- a/q_rms_rope_int8_cuda.cu
++++ b/q_rms_rope_int8_cuda.cu
+@@ -13,6 +13,7 @@
+ #include <ATen/cuda/CUDAContext.h>
+ #include <c10/cuda/CUDAGuard.h>
+ #include <c10/cuda/CUDAException.h>
++#include <torch/csrc/autograd/VariableTypeUtils.h>
+ 
+ #include <cuda_bf16.h>
+ #include <cuda_runtime.h>
+@@ -32,7 +33,7 @@
+ constexpr int kTokensPerGroup = 32;
+ constexpr int kQkvRowWidth = kHeads * kHeadDim * 3;
+ constexpr const char* kBuildId =
+-    "h3-q-rms-rope96-qint8-v2-torch2.13-sm120";
++    "h3-q-rms-rope96-qint8-v3-torch2.13-sm120";
+ 
+ __device__ __forceinline__ float warp_reduce_sum_ck(float value) {
+ #pragma unroll
+@@ -256,7 +257,8 @@
+   TORCH_CHECK(q.sizes() == k.sizes(), "q and k shapes must match");
+   TORCH_CHECK(q.size(0) == 1 && q.size(2) == kHeads && q.size(3) == kHeadDim,
+               "only H3 [1,S,56,128] q/k are supported");
+-  TORCH_CHECK(q.size(1) > 0, "sequence must be non-empty");
++  TORCH_CHECK(q.size(1) > 1024,
++              "H3 Q fusion requires a sequence longer than 1024 tokens");
+   TORCH_CHECK(q.stride(3) == 1 && k.stride(3) == 1,
+               "q/k head dimensions must be contiguous");
+   TORCH_CHECK(q.stride(2) == kHeadDim && k.stride(2) == kHeadDim,
+@@ -321,6 +323,10 @@
+   }
+ #undef H3_LAUNCH
+   C10_CUDA_KERNEL_LAUNCH_CHECK();
++  // K is mutated through its raw data pointer.  Preserve PyTorch's in-place
++  // mutation semantics for aliases and saved tensors even though this path is
++  // inference-only and deliberately bypasses the dispatcher.
++  torch::autograd::increment_version(k);
+   return {q_int8, q_scale, k};
+ }
+ 

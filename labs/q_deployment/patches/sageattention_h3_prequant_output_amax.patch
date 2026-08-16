@@ -1,0 +1,1017 @@
+diff --git a/csrc/fused/fused.cu b/csrc/fused/fused.cu
+index fb8b9f1..651b593 100644
+--- a/csrc/fused/fused.cu
++++ b/csrc/fused/fused.cu
+@@ -15,6 +15,8 @@
+  */
+ 
+ #include <ATen/cuda/CUDAContext.h>
++#include <c10/cuda/CUDAGuard.h>
++#include <c10/cuda/CUDAException.h>
+ #include <torch/extension.h>
+ 
+ #include "../dispatch_utils.h"
+@@ -435,6 +437,7 @@ void quant_per_block_int8_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+   CHECK_CUDA(scale);
+   
+@@ -492,7 +495,7 @@ void quant_per_block_int8_cuda(
+ 
+         dim3 block(BLOCK_SIZE * (HEAD_DIM / 8) / num_pack_per_thread);
+ 
+-        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, true, false, c_type><<<grid, block>>>(
++        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, true, false, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+           reinterpret_cast<c_type*>(input.data_ptr()),
+           nullptr,
+           output.data_ptr<int8_t>(),
+@@ -507,6 +510,7 @@ void quant_per_block_int8_cuda(
+       });
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void quant_per_block_int8_cuda(
+@@ -517,6 +521,7 @@ void quant_per_block_int8_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+   CHECK_CUDA(scale);
+   
+@@ -574,7 +579,7 @@ void quant_per_block_int8_cuda(
+ 
+         dim3 block(BLOCK_SIZE * (HEAD_DIM / 8) / num_pack_per_thread);
+ 
+-        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, false, false, c_type><<<grid, block>>>(
++        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, false, false, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+           reinterpret_cast<c_type*>(input.data_ptr()),
+           nullptr,
+           output.data_ptr<int8_t>(),
+@@ -589,6 +594,7 @@ void quant_per_block_int8_cuda(
+       });
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void quant_per_block_int8_fuse_sub_mean_cuda(
+@@ -600,6 +606,7 @@ void quant_per_block_int8_fuse_sub_mean_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(mean);
+   CHECK_CUDA(output);
+   CHECK_CUDA(scale);
+@@ -664,7 +671,7 @@ void quant_per_block_int8_fuse_sub_mean_cuda(
+ 
+         dim3 block(BLOCK_SIZE * (HEAD_DIM / 8) / num_pack_per_thread);
+ 
+-        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, false, true, c_type><<<grid, block>>>(
++        QuantInt8Kernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread, false, true, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+           reinterpret_cast<c_type*>(input.data_ptr()),
+           reinterpret_cast<c_type*>(mean.data_ptr()),
+           output.data_ptr<int8_t>(),
+@@ -679,6 +686,7 @@ void quant_per_block_int8_fuse_sub_mean_cuda(
+       });
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ // use block size 128 and warp_block size 32
+@@ -691,6 +699,7 @@ void quant_per_warp_int8_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+   CHECK_CUDA(scale);
+   
+@@ -749,7 +758,7 @@ void quant_per_warp_int8_cuda(
+ 
+           dim3 block(WARP_BLOCK_SIZE * (HEAD_DIM / 8) / num_pack_per_thread);
+ 
+-          QuantInt8Kernel<HEAD_DIM, WARP_BLOCK_SIZE, num_pack_per_thread, false, false, c_type><<<grid, block>>>(
++          QuantInt8Kernel<HEAD_DIM, WARP_BLOCK_SIZE, num_pack_per_thread, false, false, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+             reinterpret_cast<c_type*>(input.data_ptr()),
+             nullptr,
+             output.data_ptr<int8_t>(),
+@@ -765,6 +774,7 @@ void quant_per_warp_int8_cuda(
+       });
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void sub_mean_cuda(
+@@ -774,6 +784,7 @@ void sub_mean_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(mean);
+   CHECK_CUDA(output);
+   
+@@ -834,7 +845,7 @@ void sub_mean_cuda(
+ 
+         dim3 block(BLOCK_SIZE * (HEAD_DIM / 8) / num_pack_per_thread);
+ 
+-        SubMeanKernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread><<<grid, block>>>(
++        SubMeanKernel<HEAD_DIM, BLOCK_SIZE, num_pack_per_thread><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+           reinterpret_cast<c_type*>(input.data_ptr()),
+           reinterpret_cast<c_type*>(mean.data_ptr()),
+           reinterpret_cast<half*>(output.data_ptr()),
+@@ -845,6 +856,7 @@ void sub_mean_cuda(
+         );
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void transpose_pad_permute_cuda(
+@@ -853,6 +865,7 @@ void transpose_pad_permute_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+ 
+   CHECK_LASTDIM_CONTIGUOUS(input);
+@@ -911,7 +924,7 @@ void transpose_pad_permute_cuda(
+ 
+       dim3 block(CTA_SIZE * (HEAD_DIM / 8));
+ 
+-      TransposePadPermuteKernel<HEAD_DIM, CTA_SIZE, true, c_type><<<grid, block>>>(
++      TransposePadPermuteKernel<HEAD_DIM, CTA_SIZE, true, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+         reinterpret_cast<c_type*>(input.data_ptr()),
+         reinterpret_cast<c_type*>(output.data_ptr()),
+         num_tokens,
+@@ -920,6 +933,7 @@ void transpose_pad_permute_cuda(
+       );
+     });
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void scale_fuse_quant_cuda(
+@@ -931,6 +945,7 @@ void scale_fuse_quant_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+   CHECK_CUDA(scale);
+ 
+@@ -984,7 +999,7 @@ void scale_fuse_quant_cuda(
+   auto input_dtype = input.scalar_type();
+ 
+   DISPATCH_PYTORCH_DTYPE_TO_CTYPE_FP16(input_dtype, c_type, {
+-    MeanScaleKernel<64, false, c_type><<<grid, block>>>(
++    MeanScaleKernel<64, false, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+       reinterpret_cast<c_type*>(input.data_ptr()),
+       reinterpret_cast<int8_t*>(output.data_ptr()),
+       nullptr,
+@@ -997,6 +1012,7 @@ void scale_fuse_quant_cuda(
+       scale.stride(0), scale.stride(1)
+     );
+   });
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
+ }
+ 
+ void mean_scale_fuse_quant_cuda(
+@@ -1009,6 +1025,7 @@ void mean_scale_fuse_quant_cuda(
+                 int tensor_layout)
+ {
+   CHECK_CUDA(input);
++  const c10::cuda::CUDAGuard device_guard(input.device());
+   CHECK_CUDA(output);
+   CHECK_CUDA(mean);
+   CHECK_CUDA(scale);
+@@ -1067,7 +1084,7 @@ void mean_scale_fuse_quant_cuda(
+   auto input_dtype = input.scalar_type();
+ 
+   DISPATCH_PYTORCH_DTYPE_TO_CTYPE_FP16(input_dtype, c_type, {
+-    MeanScaleKernel<64, true, c_type><<<grid, block>>>(
++    MeanScaleKernel<64, true, c_type><<<grid, block, 0, at::cuda::getCurrentCUDAStream(input.get_device()).stream()>>>(
+       reinterpret_cast<c_type*>(input.data_ptr()),
+       reinterpret_cast<int8_t*>(output.data_ptr()),
+       reinterpret_cast<float*>(mean.data_ptr()),
+@@ -1080,4 +1097,5 @@ void mean_scale_fuse_quant_cuda(
+       scale.stride(0), scale.stride(1)
+     );
+   });
+-}
+\ No newline at end of file
++  C10_CUDA_KERNEL_LAUNCH_CHECK();
++}
+diff --git a/csrc/fused/pybind.cpp b/csrc/fused/pybind.cpp
+index bffdb06..6029dfc 100644
+--- a/csrc/fused/pybind.cpp
++++ b/csrc/fused/pybind.cpp
+@@ -20,6 +20,9 @@
+ 
+ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+ {
++  m.def("h3_build_id", []() {
++    return "h3-sage-fused-current-stream-v1-torch2.13-sm120";
++  });
+   m.def("quant_per_block_int8_cuda", py::overload_cast<torch::Tensor, torch::Tensor, torch::Tensor, float, int, int>(&quant_per_block_int8_cuda), "quant_per_block_int8_cuda");
+   m.def("quant_per_block_int8_cuda", py::overload_cast<torch::Tensor, torch::Tensor, torch::Tensor, int, int>(&quant_per_block_int8_cuda), "quant_per_block_int8_cuda");
+   m.def("quant_per_block_int8_fuse_sub_mean_cuda", py::overload_cast<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, int, int>(&quant_per_block_int8_fuse_sub_mean_cuda), "quant_per_block_int8_fuse_sub_mean_cuda");
+@@ -30,4 +33,4 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+   m.def("transpose_pad_permute_cuda", py::overload_cast<torch::Tensor, torch::Tensor, int>(&transpose_pad_permute_cuda), "transpose_pad_permute_cuda");
+   m.def("scale_fuse_quant_cuda", py::overload_cast<torch::Tensor, torch::Tensor, torch::Tensor, int, float, int>(&scale_fuse_quant_cuda), "scale_fuse_quant_cuda");
+   m.def("mean_scale_fuse_quant_cuda", py::overload_cast<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, int, float, int>(&mean_scale_fuse_quant_cuda), "mean_scale_fuse_quant_cuda");
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/attn_cuda_sm89.h b/csrc/qattn/attn_cuda_sm89.h
+index f45f8d7..34468ca 100644
+--- a/csrc/qattn/attn_cuda_sm89.h
++++ b/csrc/qattn/attn_cuda_sm89.h
+@@ -91,6 +91,17 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor q
+                     int qk_quant_gran,
+                     float sm_scale,
+                     int return_lse);
++torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(torch::Tensor query,
++                    torch::Tensor key,
++                    torch::Tensor value,
++                    torch::Tensor output,
++                    torch::Tensor query_scale,
++                    torch::Tensor key_scale,
++                    torch::Tensor value_scale,
++                    int tensor_layout,
++                    int is_causal,
++                    int qk_quant_gran,
++                    float sm_scale);
+ torch::Tensor qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(torch::Tensor query,
+                     torch::Tensor key,
+                     torch::Tensor value,
+@@ -102,4 +113,4 @@ torch::Tensor qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(torch::Tensor q
+                     int is_causal,
+                     int qk_quant_gran,
+                     float sm_scale,
+-                    int return_lse);
+\ No newline at end of file
++                    int return_lse);
+diff --git a/csrc/qattn/pybind_sm89.cpp b/csrc/qattn/pybind_sm89.cpp
+index 559179c..cf342a6 100644
+--- a/csrc/qattn/pybind_sm89.cpp
++++ b/csrc/qattn/pybind_sm89.cpp
+@@ -20,6 +20,9 @@
+ 
+ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+ {
++  m.def("h3_build_id", []() {
++    return "h3-sage-qattn-output-amax-v2-torch2.13-sm120";
++  });
+   m.def("qk_int8_sv_f8_accum_f32_attn", &qk_int8_sv_f8_accum_f32_attn, "QK int8 sv f8 accum f32 attn");
+   m.def("qk_int8_sv_f8_accum_f32_fuse_v_scale_attn", &qk_int8_sv_f8_accum_f32_fuse_v_scale_attn, "QK int8 sv f8 accum f32 fuse v scale attn");
+   m.def("qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn", &qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn, "QK int8 sv f8 accum f32 fuse v scale fuse v mean attn");
+@@ -27,5 +30,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+   m.def("qk_int8_sv_f8_accum_f32_attn_inst_buf", &qk_int8_sv_f8_accum_f32_attn_inst_buf, "QK int8 sv f8 accum f32 attn inst buf");
+   m.def("qk_int8_sv_f8_accum_f16_attn_inst_buf", &qk_int8_sv_f8_accum_f16_attn_inst_buf, "QK int8 sv f8 accum f16 attn inst buf");
+   m.def("qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf", &qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf, "QK int8 sv f8 accum f32 fuse v scale attn inst buf");
++  m.def("qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax", &qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax, "QK int8 sv f8 accum f32 fuse v scale attn inst buf with output amax");
+   m.def("qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf", &qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf, "QK int8 sv f8 accum f16 fuse v scale attn inst buf");
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/qk_int_sv_f8_cuda_sm89.cuh b/csrc/qattn/qk_int_sv_f8_cuda_sm89.cuh
+index f39719f..fa38869 100644
+--- a/csrc/qattn/qk_int_sv_f8_cuda_sm89.cuh
++++ b/csrc/qattn/qk_int_sv_f8_cuda_sm89.cuh
+@@ -42,7 +42,7 @@
+ #define MMA_SV_K 32
+ 
+ template<uint32_t CTA_Q, uint32_t CTA_K, uint32_t WARP_Q, uint32_t WARP_K, uint32_t head_dim, DataType DTypeQK, QuantGranularity Q_GRAN, QuantGranularity K_GRAN,
+-        typename DTypeSVAccum = float, bool use_inst_buffer = false, typename DTypeOut = half, ComputeUnit DenominatorAccumUnit, MaskMode mask_mode = MaskMode::kNone, bool return_lse = false, bool fuse_v_scale=false, bool fuse_v_mean=false, bool use_pv_fp16_accu=false>
++        typename DTypeSVAccum = float, bool use_inst_buffer = false, typename DTypeOut = half, ComputeUnit DenominatorAccumUnit, MaskMode mask_mode = MaskMode::kNone, bool return_lse = false, bool fuse_v_scale=false, bool fuse_v_mean=false, bool use_pv_fp16_accu=false, bool track_output_amax=false>
+ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restrict__ K, int8_t *__restrict__ V, DTypeOut *__restrict__ O, float *__restrict__ Lse,
+                       float *__restrict__ Q_scale, float *__restrict__ K_scale, float *__restrict__ V_scale, float *__restrict__ V_mean,
+                       const uint32_t qo_len, const uint32_t kv_len, const uint32_t num_kv_groups,
+@@ -50,6 +50,7 @@ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restr
+                       const uint32_t stride_bz_k, const uint32_t stride_seq_k, const uint32_t stride_h_k,
+                       const uint32_t stride_bz_v, const uint32_t stride_h_v, const uint32_t stride_d_v,
+                       const uint32_t stride_bz_o, const uint32_t stride_seq_o, const uint32_t stride_h_o,
++                      uint32_t *__restrict__ output_amax_bits,
+                       float sm_scale)
+ {
+   // compile time check
+@@ -668,6 +669,7 @@ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restr
+   DTypeOut *O_lane_ptr = O + batch_id * stride_bz_o + head_id * stride_h_o + (bx * CTA_Q + WARP_Q * get_warp_idx_q<num_warps_q, num_warps_k>() + lane_id / global_to_shared_line_lanes_O) * stride_seq_o + lane_id % global_to_shared_line_lanes_O * PACK_SIZE_O;
+   uint32_t offset_O = smem_O.get_permuted_offset(get_warp_idx_q<num_warps_q, num_warps_k>() * WARP_Q + lane_id / global_to_shared_line_lanes_O, lane_id % global_to_shared_line_lanes_O);
+   uint32_t O_load_idx_lane_base = bx * CTA_Q + CTA_Q / num_warps * warp_id + lane_id / global_to_shared_line_lanes_O;
++  uint32_t local_output_max_bits = 0;
+ 
+ #pragma unroll
+   for (uint32_t i = 0; i < O_smem_iters_col; i++)
+@@ -677,6 +679,24 @@ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restr
+     {
+       if (O_load_idx_lane_base < qo_len)
+       {
++        if constexpr (track_output_amax)
++        {
++          // This is the exact 128-bit BF16/FP16 chunk about to be written.
++          // Magnitude-ordered positive 16-bit encodings make integer max over
++          // sign-cleared finite values identical to abs(output).amax().
++          const b128_t output_chunk = *(smem_O.base + offset_O);
++          const uint16_t* output_bits =
++              reinterpret_cast<const uint16_t*>(&output_chunk);
++#pragma unroll
++          for (uint32_t value_idx = 0; value_idx < 8; ++value_idx)
++          {
++            const uint32_t abs_bits =
++                static_cast<uint32_t>(output_bits[value_idx] & 0x7fffu);
++            local_output_max_bits = local_output_max_bits < abs_bits
++                ? abs_bits
++                : local_output_max_bits;
++          }
++        }
+         smem_O.store_128b(offset_O, O_lane_ptr);
+       }
+       O_lane_ptr += (global_to_shared_line_lanes_O * PACK_SIZE_O);
+@@ -688,6 +708,29 @@ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restr
+     O_load_idx_lane_base += global_to_shared_copy_lines_per_warp_O;
+   }
+ 
++  if constexpr (track_output_amax)
++  {
++    // One atomic per warp, off the already resident output fragment. No extra
++    // global read of the [S, H, D] attention result is required.
++#pragma unroll
++    for (int offset = 16; offset >= 1; offset >>= 1)
++    {
++      const uint32_t other = __shfl_down_sync(
++          0xffffffffu, local_output_max_bits, offset);
++      local_output_max_bits =
++          local_output_max_bits < other ? other : local_output_max_bits;
++    }
++    if (lane_id == 0)
++    {
++      const uint32_t marker = local_output_max_bits >= 0x7f80u
++          ? local_output_max_bits | 0x80000000u
++          : local_output_max_bits;
++      atomicMax(
++          reinterpret_cast<unsigned int*>(output_amax_bits),
++          static_cast<unsigned int>(marker));
++    }
++  }
++
+   if constexpr (return_lse)
+   { 
+     // ! this only works for num_tiles_q = 2
+@@ -705,6 +748,3 @@ __global__ void qk_int_sv_f8_attn_kernel(int8_t *__restrict__ Q, int8_t *__restr
+ 
+ 
+ 
+-
+-
+-
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_attn_inst_buf.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_attn_inst_buf.cu
+index c66a81f..e22a39c 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_attn_inst_buf.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_attn_inst_buf.cu
+@@ -169,6 +169,7 @@ torch::Tensor qk_int8_sv_f8_accum_f16_attn_inst_buf(torch::Tensor query,
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -177,4 +178,4 @@ torch::Tensor qk_int8_sv_f8_accum_f16_attn_inst_buf(torch::Tensor query,
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf.cu
+index 727030f..2fda7d4 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf.cu
+@@ -176,6 +176,7 @@ torch::Tensor qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(torch::Tensor q
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -184,4 +185,4 @@ torch::Tensor qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(torch::Tensor q
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn.cu
+index d99d1aa..32e2842 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn.cu
+@@ -169,6 +169,7 @@ torch::Tensor qk_int8_sv_f8_accum_f32_attn(torch::Tensor query,
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -177,4 +178,4 @@ torch::Tensor qk_int8_sv_f8_accum_f32_attn(torch::Tensor query,
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn_inst_buf.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn_inst_buf.cu
+index 14b9b03..8114d16 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn_inst_buf.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_attn_inst_buf.cu
+@@ -168,6 +168,7 @@ torch::Tensor qk_int8_sv_f8_accum_f32_attn_inst_buf(torch::Tensor query,
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -176,4 +177,4 @@ torch::Tensor qk_int8_sv_f8_accum_f32_attn_inst_buf(torch::Tensor query,
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn.cu
+index 918b156..e4e5168 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn.cu
+@@ -176,6 +176,7 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn(torch::Tensor query,
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -184,4 +185,4 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn(torch::Tensor query,
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf.cu
+index cc1a85c..f04b13b 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf.cu
+@@ -1,6 +1,12 @@
+ #include "attn_cuda_sm89.h"
+ #include "qk_int_sv_f8_cuda_sm89.cuh"
+-torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor query,
++#include <ATen/cuda/CUDAContext.h>
++#include <c10/cuda/CUDAGuard.h>
++#include <c10/cuda/CUDAException.h>
++
++namespace {
++
++torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_impl(torch::Tensor query,
+                     torch::Tensor key,
+                     torch::Tensor value,
+                     torch::Tensor output,
+@@ -11,7 +17,8 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor q
+                     int is_causal,
+                     int qk_quant_gran,
+                     float sm_scale,
+-                    int return_lse)
++                    int return_lse,
++                    bool return_output_amax)
+ {
+   CHECK_CUDA(query);
+   CHECK_CUDA(key);
+@@ -45,9 +52,28 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor q
+   CHECK_DIMS(key_scale, 3);
+   CHECK_DIMS(value_scale, 3);
+ 
++  const c10::cuda::CUDAGuard device_guard(query.device());
++
+   const int batch_size = query.size(0);
+   const int head_dim = query.size(3);
+ 
++  TORCH_CHECK(!(return_lse && return_output_amax),
++              "LSE and output amax cannot be returned together");
++  if (return_output_amax)
++  {
++    TORCH_CHECK(tensor_layout == 0 && batch_size == 1 && head_dim == 128 &&
++                !is_causal && qk_quant_gran == 2 &&
++                output.scalar_type() == torch::kBFloat16 &&
++                output.is_contiguous() &&
++                key.device() == query.device() &&
++                value.device() == query.device() &&
++                output.device() == query.device() &&
++                query_scale.device() == query.device() &&
++                key_scale.device() == query.device() &&
++                value_scale.device() == query.device(),
++                "output amax requires H3 NHD BF16 per-warp head-dim-128 attention");
++  }
++
+   int stride_bz_q = query.stride(0);
+   int stride_bz_k = key.stride(0);
+   int stride_bz_v = value.stride(0);
+@@ -104,12 +130,26 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor q
+     err_msg << "num_qo_heads (" << num_qo_heads << ") must be divisible by num_kv_heads (" << num_kv_heads << ")";
+     throw std::invalid_argument(err_msg.str());  
+   }
++  if (return_output_amax)
++  {
++    TORCH_CHECK(qo_len > 1024 && qo_len == kv_len &&
++                num_qo_heads == 56 && num_kv_heads == 56,
++                "output amax requires H3 batch-1 self-attention with 56 heads");
++  }
+ 
++  // Preserve the original operator's empty CPU float32 return when LSE is not
++  // requested. Only the additive entry point allocates a CUDA marker.
+   torch::Tensor lse = torch::empty({0});
++  torch::Tensor output_amax_bits;
+   if (return_lse)
+   {
+     lse = torch::empty({batch_size, num_qo_heads, qo_len}, query.options().dtype(torch::kFloat32));
+   }
++  else if (return_output_amax)
++  {
++    output_amax_bits = torch::zeros(
++        {1}, output.options().dtype(torch::kInt32));
++  }
+ 
+   const int num_kv_groups = num_qo_heads / num_kv_heads;
+ 
+@@ -151,37 +191,95 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(torch::Tensor q
+             //                                     smem_Q                                     smem_K                            smem_V                     smem_O
+             size_t smem_max = std::max(CTA_Q * HEAD_DIM * sizeof(int8_t) + CTA_K * HEAD_DIM * sizeof(int8_t) + CTA_K * HEAD_DIM * sizeof(int8_t), CTA_Q * HEAD_DIM * sizeof(half));
+             
+-            auto kernel_func = qk_int_sv_f8_attn_kernel<CTA_Q, CTA_K, WARP_Q, WARP_K, HEAD_DIM, DataType::kInt8, static_cast<QuantGranularity>(QK_QUANT_GRAN), static_cast<QuantGranularity>(QK_QUANT_GRAN),
+-                                                        float, true, DTypeOut, ComputeUnit::kCudaCore, mask_mode, RETURN_LSE, true, false, false>;
+-
+-            cudaFuncSetAttribute(kernel_func, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_max);
+-
+             dim3 grid(div_ceil(qo_len, CTA_Q), num_qo_heads, batch_size);
+             dim3 block(32, (CTA_Q / WARP_Q) * (CTA_K / WARP_K));
+ 
+-            kernel_func<<<grid, block, smem_max>>>(
+-              query.data_ptr<int8_t>(), 
+-              key.data_ptr<int8_t>(),
+-              reinterpret_cast<int8_t*>(value.data_ptr()),
+-              reinterpret_cast<DTypeOut*>(output.data_ptr()),
+-              (RETURN_LSE) ? reinterpret_cast<float*>(lse.data_ptr()) : nullptr,
+-              reinterpret_cast<float*>(query_scale.data_ptr()),
+-              reinterpret_cast<float*>(key_scale.data_ptr()),
+-              reinterpret_cast<float*>(value_scale.data_ptr()),
+-              nullptr,
+-              qo_len,
+-              kv_len,
+-              num_kv_groups,
+-              stride_bz_q, stride_seq_q, stride_h_q,
+-              stride_bz_k, stride_seq_k, stride_h_k,
+-              stride_bz_v, stride_h_v, stride_d_v,
+-              stride_bz_o, stride_seq_o, stride_h_o,
+-              sm_scale);
++            const cudaStream_t stream = at::cuda::getCurrentCUDAStream(
++                query.get_device()).stream();
++            auto launch = [&](auto track_output_amax) {
++              constexpr bool TRACK_OUTPUT_AMAX = decltype(track_output_amax)::value;
++              auto kernel_func = qk_int_sv_f8_attn_kernel<CTA_Q, CTA_K, WARP_Q, WARP_K, HEAD_DIM, DataType::kInt8, static_cast<QuantGranularity>(QK_QUANT_GRAN), static_cast<QuantGranularity>(QK_QUANT_GRAN),
++                                                          float, true, DTypeOut, ComputeUnit::kCudaCore, mask_mode, RETURN_LSE, true, false, false, TRACK_OUTPUT_AMAX>;
++
++              C10_CUDA_CHECK(cudaFuncSetAttribute(
++                  kernel_func,
++                  cudaFuncAttributeMaxDynamicSharedMemorySize,
++                  smem_max));
++              kernel_func<<<grid, block, smem_max, stream>>>(
++                query.data_ptr<int8_t>(),
++                key.data_ptr<int8_t>(),
++                reinterpret_cast<int8_t*>(value.data_ptr()),
++                reinterpret_cast<DTypeOut*>(output.data_ptr()),
++                (RETURN_LSE) ? reinterpret_cast<float*>(lse.data_ptr()) : nullptr,
++                reinterpret_cast<float*>(query_scale.data_ptr()),
++                reinterpret_cast<float*>(key_scale.data_ptr()),
++                reinterpret_cast<float*>(value_scale.data_ptr()),
++                nullptr,
++                qo_len,
++                kv_len,
++                num_kv_groups,
++                stride_bz_q, stride_seq_q, stride_h_q,
++                stride_bz_k, stride_seq_k, stride_h_k,
++                stride_bz_v, stride_h_v, stride_d_v,
++                stride_bz_o, stride_seq_o, stride_h_o,
++                TRACK_OUTPUT_AMAX
++                    ? reinterpret_cast<uint32_t*>(output_amax_bits.data_ptr<int32_t>())
++                    : nullptr,
++                sm_scale);
++            };
++            if (return_output_amax)
++            {
++              launch(std::true_type{});
++            }
++            else
++            {
++              launch(std::false_type{});
++            }
++            C10_CUDA_KERNEL_LAUNCH_CHECK();
+           });
+         });
+       });
+     });
+   });
+ 
+-  return lse;
+-}
+\ No newline at end of file
++  return return_output_amax ? output_amax_bits : lse;
++}
++
++}  // namespace
++
++torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(
++                    torch::Tensor query,
++                    torch::Tensor key,
++                    torch::Tensor value,
++                    torch::Tensor output,
++                    torch::Tensor query_scale,
++                    torch::Tensor key_scale,
++                    torch::Tensor value_scale,
++                    int tensor_layout,
++                    int is_causal,
++                    int qk_quant_gran,
++                    float sm_scale,
++                    int return_lse)
++{
++  return qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_impl(
++      query, key, value, output, query_scale, key_scale, value_scale,
++      tensor_layout, is_causal, qk_quant_gran, sm_scale, return_lse, false);
++}
++
++torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(
++                    torch::Tensor query,
++                    torch::Tensor key,
++                    torch::Tensor value,
++                    torch::Tensor output,
++                    torch::Tensor query_scale,
++                    torch::Tensor key_scale,
++                    torch::Tensor value_scale,
++                    int tensor_layout,
++                    int is_causal,
++                    int qk_quant_gran,
++                    float sm_scale)
++{
++  return qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_impl(
++      query, key, value, output, query_scale, key_scale, value_scale,
++      tensor_layout, is_causal, qk_quant_gran, sm_scale, 0, true);
++}
+diff --git a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn.cu b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn.cu
+index fb3db8b..5787089 100644
+--- a/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn.cu
++++ b/csrc/qattn/sm89_qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn.cu
+@@ -181,6 +181,7 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn(torch::Tenso
+               stride_bz_k, stride_seq_k, stride_h_k,
+               stride_bz_v, stride_h_v, stride_d_v,
+               stride_bz_o, stride_seq_o, stride_h_o,
++              nullptr,
+               sm_scale);
+           });
+         });
+@@ -189,4 +190,4 @@ torch::Tensor qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn(torch::Tenso
+   });
+ 
+   return lse;
+-}
+\ No newline at end of file
++}
+diff --git a/sageattention/__init__.py b/sageattention/__init__.py
+index 73b0256..5732ea0 100644
+--- a/sageattention/__init__.py
++++ b/sageattention/__init__.py
+@@ -2,4 +2,8 @@ from .core import sageattn, sageattn_varlen
+ from .core import sageattn_qk_int8_pv_fp16_triton
+ from .core import sageattn_qk_int8_pv_fp16_cuda 
+ from .core import sageattn_qk_int8_pv_fp8_cuda
+-from .core import sageattn_qk_int8_pv_fp8_cuda_sm90
+\ No newline at end of file
++from .core import sageattn_qk_int8_pv_fp8_cuda_with_output_amax
++from .core import sageattn_output_amax_available
++from .core import sageattn_h3_prequantized_q_available
++from .core import sageattn_h3_prequantized_q_pv_fp8_cuda
++from .core import sageattn_qk_int8_pv_fp8_cuda_sm90
+diff --git a/sageattention/core.py b/sageattention/core.py
+index 96da4c0..6af3908 100644
+--- a/sageattention/core.py
++++ b/sageattention/core.py
+@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
+ limitations under the License.
+ """
+ 
++import math
++
+ import torch
+ import torch.nn.functional as F
+ 
+@@ -633,7 +635,7 @@ def sageattn_qk_int8_pv_fp16_cuda(
+         return o
+ 
+ 
+-def sageattn_qk_int8_pv_fp8_cuda(
++def _sageattn_qk_int8_pv_fp8_cuda(
+     q: torch.Tensor, 
+     k: torch.Tensor, 
+     v: torch.Tensor,
+@@ -645,6 +647,7 @@ def sageattn_qk_int8_pv_fp8_cuda(
+     smooth_k: bool = True,
+     smooth_v: bool = False,
+     return_lse: bool = False,
++    return_output_amax: bool = False,
+     **kwargs: Any,
+ ) -> torch.Tensor:
+     """
+@@ -728,6 +731,21 @@ def sageattn_qk_int8_pv_fp8_cuda(
+     assert qk_quant_gran in ["per_warp", "per_thread"], "qk_quant_gran must be either 'per_warp' or 'per_thread'."
+     assert q.device == k.device == v.device, "All tensors must be on the same device."
+     assert q.dtype == k.dtype == v.dtype, "All tensors must have the same dtype."
++    if return_output_amax and (
++        return_lse
++        or dtype != torch.bfloat16
++        or tensor_layout != "NHD"
++        or q.shape[0] != 1
++        or q.shape[-1] != 128
++        or is_causal
++        or qk_quant_gran != "per_warp"
++        or pv_accum_dtype != "fp32+fp32"
++        or smooth_v
++    ):
++        raise ValueError(
++            "output amax requires H3 quality NHD BF16 batch-1 per-warp "
++            "noncausal head-dim-128 attention without LSE or V smoothing"
++        )
+ 
+     # cuda_major_version, cuda_minor_version = get_cuda_version()
+     # if(cuda_major_version, cuda_minor_version) < (12, 8) and pv_accum_dtype == 'fp32+fp16':
+@@ -814,7 +832,10 @@ def sageattn_qk_int8_pv_fp8_cuda(
+         else:
+             lse = sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn(q_int8, k_int8, v_fp8, o, q_scale, k_scale, v_scale, _tensor_layout, _is_caual, _qk_quant_gran, sm_scale, _return_lse)
+     elif pv_accum_dtype == "fp32+fp32":
+-        lse = sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(q_int8, k_int8, v_fp8, o, q_scale, k_scale, v_scale, _tensor_layout, _is_caual, _qk_quant_gran, sm_scale, _return_lse)
++        if return_output_amax:
++            lse = sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(q_int8, k_int8, v_fp8, o, q_scale, k_scale, v_scale, _tensor_layout, _is_caual, _qk_quant_gran, sm_scale)
++        else:
++            lse = sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(q_int8, k_int8, v_fp8, o, q_scale, k_scale, v_scale, _tensor_layout, _is_caual, _qk_quant_gran, sm_scale, _return_lse)
+     elif pv_accum_dtype == "fp32+fp16":
+         lse = sm89_compile.qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(q_int8, k_int8, v_fp8, o, q_scale, k_scale, v_scale, _tensor_layout, _is_caual, _qk_quant_gran, sm_scale, _return_lse)
+ 
+@@ -822,10 +843,168 @@ def sageattn_qk_int8_pv_fp8_cuda(
+ 
+     if return_lse:
+         return o, lse / 1.44269504 + lse_correction * sm_scale if smooth_k else lse / 1.44269504
++    elif return_output_amax:
++        return o, lse
+     else:
+         return o
+ 
+ 
++def sageattn_qk_int8_pv_fp8_cuda_with_output_amax(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    **kwargs: Any,
++) -> Tuple[torch.Tensor, torch.Tensor]:
++    """Run the exact H3 quality path and return its output BF16 amax bits."""
++    return _sageattn_qk_int8_pv_fp8_cuda(
++        q, k, v, return_output_amax=True, **kwargs
++    )
++
++
++def sageattn_output_amax_available() -> bool:
++    """Return whether the additive native output-amax symbol is installed."""
++    return (
++        SM89_ENABLED
++        and callable(getattr(sm89_compile._qattn_sm89, "h3_build_id", None))
++        and sm89_compile._qattn_sm89.h3_build_id()
++        == "h3-sage-qattn-output-amax-v2-torch2.13-sm120"
++        and callable(
++            getattr(
++                sm89_compile._qattn_sm89,
++                "qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax",
++                None,
++            )
++        )
++    )
++
++
++def sageattn_h3_prequantized_q_available(
++    *, return_output_amax: bool = False
++) -> bool:
++    """Report support for the explicit H3 prequantized-Q consumer."""
++    from . import _fused
++    if not (
++        SM89_ENABLED
++        and callable(getattr(_fused, "h3_build_id", None))
++        and _fused.h3_build_id()
++        == "h3-sage-fused-current-stream-v1-torch2.13-sm120"
++        and callable(getattr(_fused, "quant_per_block_int8_fuse_sub_mean_cuda", None))
++        and callable(getattr(sm89_compile._qattn_sm89, "h3_build_id", None))
++        and sm89_compile._qattn_sm89.h3_build_id()
++        == "h3-sage-qattn-output-amax-v2-torch2.13-sm120"
++    ):
++        return False
++    return not return_output_amax or sageattn_output_amax_available()
++
++
++def sageattn_h3_prequantized_q_pv_fp8_cuda(
++    q_int8: torch.Tensor,
++    q_scale: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    *,
++    return_output_amax: bool = False,
++) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
++    """Consume exact H3 NHD per-warp Q quantization.
++
++    This additive API is intentionally not a generic SageAttention overload.
++    It accepts only the output contract of H3's fused Q/K RMS-RoPE producer;
++    K smoothing/quantization, V FP8 conversion, and attention remain identical
++    to the quality path in :func:`sageattn_qk_int8_pv_fp8_cuda`.
++    """
++    if not sageattn_h3_prequantized_q_available(
++        return_output_amax=return_output_amax
++    ):
++        raise RuntimeError("H3 prequantized-Q SageAttention is unavailable")
++    if not (
++        q_int8.is_cuda
++        and k.is_cuda
++        and v.is_cuda
++        and q_scale.is_cuda
++        and q_int8.dtype == torch.int8
++        and q_scale.dtype == torch.float32
++        and k.dtype == torch.bfloat16
++        and v.dtype == torch.bfloat16
++        and q_int8.ndim == 4
++        and q_int8.shape == k.shape == v.shape
++        and q_int8.shape[0] == 1
++        and q_int8.shape[2:] == (56, 128)
++        and q_int8.shape[1] > 1024
++        and q_int8.is_contiguous()
++        and q_scale.is_contiguous()
++        and k.stride(-1) == 1
++        and v.stride(-1) == 1
++        and q_int8.device == q_scale.device == k.device == v.device
++        and q_scale.shape
++        == (1, 56, ((q_int8.shape[1] + 127) // 128) * 4)
++        and not any(t.requires_grad for t in (q_int8, q_scale, k, v))
++        and not torch.is_grad_enabled()
++    ):
++        raise ValueError("invalid H3 prequantized-Q attention contract")
++
++    torch.cuda.set_device(v.device)
++    km = k.mean(dim=1, keepdim=True)
++    k_int8 = torch.empty_like(k, dtype=torch.int8)
++    k_scale = torch.empty(
++        (1, 56, (k.shape[1] + 63) // 64),
++        device=k.device,
++        dtype=torch.float32,
++    )
++    # This is the K half of per_warp_int8_cuda with smooth_k=True.
++    from . import _fused
++    _fused.quant_per_block_int8_fuse_sub_mean_cuda(
++        k, km.squeeze(1), k_int8, k_scale, 64, 0
++    )
++
++    v_fp8, v_scale, _ = per_channel_fp8(
++        v, tensor_layout="NHD", scale_max=448.0, smooth_v=False
++    )
++    output = torch.empty(k.shape, dtype=torch.bfloat16, device=k.device)
++    sm_scale = 1.0 / math.sqrt(128)
++    if return_output_amax:
++        marker = sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(
++            q_int8, k_int8, v_fp8, output, q_scale, k_scale, v_scale,
++            0, 0, 2, sm_scale,
++        )
++        return output, marker
++    sm89_compile.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(
++        q_int8, k_int8, v_fp8, output, q_scale, k_scale, v_scale,
++        0, 0, 2, sm_scale, 0,
++    )
++    return output
++
++
++def sageattn_qk_int8_pv_fp8_cuda(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    v: torch.Tensor,
++    tensor_layout: str = "HND",
++    is_causal: bool = False,
++    qk_quant_gran: str = "per_thread",
++    sm_scale: Optional[float] = None,
++    pv_accum_dtype: str = "fp32+fp16",
++    smooth_k: bool = True,
++    smooth_v: bool = False,
++    return_lse: bool = False,
++    **kwargs: Any,
++) -> torch.Tensor:
++    """Preserve SageAttention's public FP8 API and return contract."""
++    return _sageattn_qk_int8_pv_fp8_cuda(
++        q,
++        k,
++        v,
++        tensor_layout=tensor_layout,
++        is_causal=is_causal,
++        qk_quant_gran=qk_quant_gran,
++        sm_scale=sm_scale,
++        pv_accum_dtype=pv_accum_dtype,
++        smooth_k=smooth_k,
++        smooth_v=smooth_v,
++        return_lse=return_lse,
++        **kwargs,
++    )
++
++
+ def sageattn_qk_int8_pv_fp8_cuda_sm90(
+     q: torch.Tensor, 
+     k: torch.Tensor, 
+diff --git a/sageattention/sm89_compile.py b/sageattention/sm89_compile.py
+index 29febca..fcb7e1c 100644
+--- a/sageattention/sm89_compile.py
++++ b/sageattention/sm89_compile.py
+@@ -45,6 +45,26 @@ def qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf(
+     )
+ 
+ 
++@torch.library.custom_op("sageattention_sm89::qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax", mutates_args=("output",), device_types="cuda")
++def qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(
++    query: torch.Tensor,
++    key: torch.Tensor,
++    value: torch.Tensor,
++    output: torch.Tensor,
++    query_scale: torch.Tensor,
++    key_scale: torch.Tensor,
++    value_scale: torch.Tensor,
++    tensor_layout: int,
++    is_causal: int,
++    qk_quant_gran: int,
++    sm_scale: float,
++) -> torch.Tensor:
++    return _qattn_sm89.qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax(
++        query, key, value, output, query_scale, key_scale, value_scale,
++        tensor_layout, is_causal, qk_quant_gran, sm_scale
++    )
++
++
+ @torch.library.custom_op("sageattention_sm89::qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf", mutates_args=("output",), device_types="cuda")
+ def qk_int8_sv_f8_accum_f16_fuse_v_scale_attn_inst_buf(
+     query: torch.Tensor, 
+@@ -101,6 +121,23 @@ torch.library.register_fake("sageattention_sm89::qk_int8_sv_f8_accum_f16_fuse_v_
+ torch.library.register_fake("sageattention_sm89::qk_int8_sv_f8_accum_f32_fuse_v_scale_attn")(sm89_qk_with_key_value)
+ 
+ 
++@torch.library.register_fake("sageattention_sm89::qk_int8_sv_f8_accum_f32_fuse_v_scale_attn_inst_buf_with_output_amax")
++def sm89_qk_with_output_amax_fake(
++    query: torch.Tensor,
++    key: torch.Tensor,
++    value: torch.Tensor,
++    output: torch.Tensor,
++    query_scale: torch.Tensor,
++    key_scale: torch.Tensor,
++    value_scale: torch.Tensor,
++    tensor_layout: int,
++    is_causal: int,
++    qk_quant_gran: int,
++    sm_scale: float,
++) -> torch.Tensor:
++    return torch.empty((1,), dtype=torch.int32, device=query.device)
++
++
+ @torch.library.custom_op("sageattention_sm89::qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn", mutates_args=("output",), device_types="cuda")
+ def qk_int8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn(
+     query: torch.Tensor, 
+diff --git a/setup.py b/setup.py
+index 6b2c5b4..a9c8d00 100644
+--- a/setup.py
++++ b/setup.py
+@@ -158,7 +158,11 @@ if not SKIP_CUDA_BUILD:
+             num = "100a"
+         elif capability.startswith("12.0"):
+             HAS_SM120 = True
+-            num = "120a"
++            # H3's SM89-family kernels do not use architecture-specific
++            # Blackwell-a instructions. Emitting family-compatible sm_120
++            # cubins lets the same staged extension run on GB10's sm_121,
++            # matching the production build contract.
++            num = "120"
+         elif capability.startswith("12.1"):
+             HAS_SM121 = True
+             num = "121a"

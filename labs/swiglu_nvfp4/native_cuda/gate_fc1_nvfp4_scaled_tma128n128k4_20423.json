@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "Kitchen 128x128x256 single-N tile == cublasLt on the m16n8k64 atom. One B operand (not paired arms). 2-stage K=256. Profiler: 128x128x256_1x1x1 s16864.",
+  "k": 5376,
+  "k2_prod_min_ms": 37.0229,
+  "kit_full_min_ms": 67.7126,
+  "kit_vs_kitchen_max_abs": 0.0,
+  "kit_vs_kitchen_mismatches": 0,
+  "kitchen_gemm_min_ms": 20.1805,
+  "kitchen_kernel": "cutlass3x_sm120_bstensorop_s16864gemm_block_scaled_ue4m3xe2m1_ue4m3xe2m1_f32_bf16_bf16_128x128x256_1x1x1",
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "vs_kitchen_ms": -47.5321
+}

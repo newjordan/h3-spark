@@ -1,0 +1,143 @@
+--- a/tests/test_minimax_h3_gate_rms_adaln_nvfp4_static.py
++++ b/tests/test_minimax_h3_gate_rms_adaln_nvfp4_static.py
+@@ -71,6 +71,10 @@
+     setattr(linear, fused.BRIDGE_ATTRS[1], frozenset({tuple(x.shape)}))
+     setattr(linear, fused.BRIDGE_ATTRS[2], frozenset({str(torch.bfloat16)}))
+     setattr(linear, fused.BRIDGE_ATTRS[3], input_scale)
++    setattr(linear, fused.BRIDGE_ATTRS[4], (1, 2))
++    linear._forward_pre_hooks = {1: object()}
++    linear._forward_hooks = {2: object()}
++    linear._forward_hooks_always_called = {2}
+ 
+ 
+ def complete_bridge(linear):
+@@ -191,7 +195,7 @@
+     ) is None
+ 
+ 
+-def test_preflight_binds_exact_fc1_owner_parent_and_linear_hooks(monkeypatch):
++def test_preflight_binds_exact_fc1_owner_parent_and_bridge_certified_hooks(monkeypatch):
+     case = make_call()
+     common = {
+         "parent_eligible": lambda *_args: True,
+@@ -211,8 +215,10 @@
+     case.linear.out_features = 5376
+     assert not fused._preflight_eligible(*args(case)[:9])
+     case.linear.out_features = 28672
++    # The exact plan-owned hook set is certified by `_static_scale`; preflight
++    # must not reject those local hooks before reaching that shared predicate.
+     case.linear._forward_hooks = {1: object()}
+-    assert not fused._preflight_eligible(*args(case)[:9])
++    assert fused._preflight_eligible(*args(case)[:9])
+ 
+ 
+ def test_gate_contract_is_fp32_and_rejects_every_x_alias():
+@@ -322,6 +328,48 @@
+     assert order == ["uncast-norm"]
+ 
+ 
++def test_norm_cast_callback_reruns_full_preflight_before_mutation(monkeypatch):
++    case = make_call()
++    complete_bridge(case.linear)
++    input_scale = torch.tensor(0.25)
++    norm_weight = object()
++    eligible = {"value": True}
++    preflight_values = []
++    order = []
++    native = SimpleNamespace(
++        gate_rms_adaln_nvfp4_static=lambda *_args: (_ for _ in ()).throw(
++            AssertionError("mutation entered")
++        )
++    )
++
++    def preflight(*_args):
++        preflight_values.append(eligible["value"])
++        return eligible["value"]
++
++    def cast(module, *_args, **_kwargs):
++        assert module is case.norm
++        order.append("cast-norm")
++        eligible["value"] = False
++        return norm_weight, None, "norm-stream"
++
++    monkeypatch.setattr(fused, "_preflight_eligible", preflight)
++    monkeypatch.setattr(fused, "_static_scale", lambda *_args: input_scale)
++    monkeypatch.setattr(fused, "_storage_disjoint", lambda *_args: True)
++    monkeypatch.setattr(fused, "_load_native", lambda: native)
++    monkeypatch.setattr(fused, "run_every_op", lambda: None)
++    monkeypatch.setattr(fused, "cast_bias_weight", cast)
++    monkeypatch.setattr(fused, "_cast_norm_weight_eligible", lambda *_args: True)
++    monkeypatch.setattr(
++        fused,
++        "uncast_bias_weight",
++        lambda *_args: order.append("uncast-norm"),
++    )
++
++    assert fused.try_linear(*args(case)) is None
++    assert preflight_values == [True, True, False]
++    assert order == ["cast-norm", "uncast-norm"]
++
++
+ def test_native_failure_propagates_without_linear_cast(monkeypatch):
+     case = make_call()
+     complete_bridge(case.linear)
+@@ -360,6 +408,9 @@
+ 
+ def patch_success_guards(monkeypatch, case, input_scale, native):
+     monkeypatch.setattr(fused, "_preflight_eligible", lambda *_args: True)
++    monkeypatch.setattr(fused, "parent_eligible", lambda *_args: True)
++    monkeypatch.setattr(fused, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(fused, "_linear_eligible", lambda *_args: True)
+     monkeypatch.setattr(fused, "_static_scale", lambda *_args: input_scale)
+     monkeypatch.setattr(fused, "_storage_disjoint", lambda *_args: True)
+     monkeypatch.setattr(fused, "_load_native", lambda: native)
+@@ -420,6 +471,49 @@
+         fused.try_linear(*args(case))
+     assert order == ["cast-norm", "uncast-norm", "cast-linear", "uncast-linear"]
+ 
++
++@pytest.mark.parametrize("changed_guard", ["norm", "linear"])
++def test_linear_cast_callback_eligibility_change_raises_after_mutation(
++    monkeypatch, changed_guard
++):
++    case = make_call()
++    complete_bridge(case.linear)
++    input_scale = torch.tensor(0.25)
++    qdata = torch.empty(16, 2688, dtype=torch.uint8)
++    block_scale = torch.empty(128, 336, dtype=torch.uint8)
++    native = SimpleNamespace(
++        gate_rms_adaln_nvfp4_static=lambda *_args: (qdata, block_scale)
++    )
++    patch_success_guards(monkeypatch, case, input_scale, native)
++    eligible = {"norm": True, "linear": True}
++    order = []
++    weight = FakeQuantizedTensor(
++        layout_cls=fused.NVFP4_LAYOUT,
++        params=SimpleNamespace(transposed=False),
++    )
++
++    def cast(module, *_args, **_kwargs):
++        if module is case.norm:
++            order.append("cast-norm")
++            return object(), None, "norm-stream"
++        order.append("cast-linear")
++        eligible[changed_guard] = False
++        return weight, None, "linear-stream"
++
++    def uncast(module, *_args):
++        order.append("uncast-norm" if module is case.norm else "uncast-linear")
++
++    monkeypatch.setattr(fused, "_norm_eligible", lambda *_args: eligible["norm"])
++    monkeypatch.setattr(
++        fused, "_linear_eligible", lambda *_args: eligible["linear"]
++    )
++    monkeypatch.setattr(fused, "cast_bias_weight", cast)
++    monkeypatch.setattr(fused, "uncast_bias_weight", uncast)
++
++    with pytest.raises(RuntimeError, match="eligibility.*changed"):
++        fused.try_linear(*args(case))
++    assert order == ["cast-norm", "uncast-norm", "cast-linear", "uncast-linear"]
++
+ 
+ def test_success_preserves_scale_identity_and_sequential_cast_lifetimes(monkeypatch):
+     case = make_call()

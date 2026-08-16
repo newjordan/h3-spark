@@ -1,0 +1,266 @@
+{
+  "identity": "bf16_nvfp4 (QKV 5376 / out 7168 / FC1-in 5376 / FC2 14336) uses the same pre-clamp as SwiGLU sat cert. Pack saturate is FP32 decode=absmax/6/G > 448. Validator overflow is the multiply T/(G*2688)>1. Over reals they are T>G*2688. At G=fp32(T/2688) they can 1-ULP disagree (14336 this draw). FixedRef 1.005 / median 0.416 agree. Two-pass G is bf16(T/2688) and can self-ratio > 1; that is the association, not a fallback. The four exclusions are 1/20 spike calls vs a calibrated G, not layers. 28672 is not a bf16_nvfp4 width (FC1 out / SwiGLU raw; sat cert). Algebra only. Not a margin raise. Per-call fallback not hooked. Not promoted.",
+  "device": "NVIDIA GB10",
+  "rows": 20423,
+  "legal_widths": [
+    5376,
+    7168,
+    14336
+  ],
+  "ticket_width_28672": {
+    "is_bf16_nvfp4_width": false,
+    "rejected_by_pack": true,
+    "reject": "input must have shape [S, K] with H3 width [5376, 7168, 14336], got (16, 28672)",
+    "actual_object": "FC1 out_features / SwiGLU raw; see gate_sat_cert_20423.json"
+  },
+  "widths": [
+    {
+      "width": 5376,
+      "role": "qkv_and_fc1_input",
+      "live_t": 5.875,
+      "live_g": 0.0021820068359375,
+      "live_g_is_bf16_t_over_2688": true,
+      "live_bytes_exact": true,
+      "exact_ratio_is_one": true,
+      "margin_is_foreign_g": true,
+      "margin_vs_twopass_q": 7883744,
+      "cases": {
+        "live_g": {
+          "g": 0.0021820068359375,
+          "ratio": 1.0016650016650017,
+          "decode_unclamped_max": 448.7459411621094,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 1,
+          "sat_validator_multiply": 1,
+          "expect_sat": 1,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "chef_qkv10_1p005": {
+          "g": 0.002170219784602523,
+          "ratio": 1.0071053155349803,
+          "decode_unclamped_max": 451.1831970214844,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 1,
+          "sat_validator_multiply": 1,
+          "expect_sat": 1,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true,
+          "chef_heldout_ratio": 1.0054313299119013
+        },
+        "median_safe_0p416": {
+          "g": 0.005245209205895662,
+          "ratio": 0.41669260369933425,
+          "decode_unclamped_max": 186.67828369140625,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "exact_ratio_1": {
+          "g": 0.002185639925301075,
+          "ratio": 0.9999999797090575,
+          "decode_unclamped_max": 448.0,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "margin_1p30_foreign": {
+          "g": 0.0028366087935864925,
+          "ratio": 0.7705115650399388,
+          "decode_unclamped_max": 345.1891784667969,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        }
+      },
+      "multiply_divide_1ulp_at_exact_g": false,
+      "pass": true
+    },
+    {
+      "width": 7168,
+      "role": "attn_out_input",
+      "live_t": 5.875,
+      "live_g": 0.0021820068359375,
+      "live_g_is_bf16_t_over_2688": true,
+      "live_bytes_exact": true,
+      "exact_ratio_is_one": true,
+      "margin_is_foreign_g": true,
+      "margin_vs_twopass_q": 10513433,
+      "cases": {
+        "live_g": {
+          "g": 0.0021820068359375,
+          "ratio": 1.0016650016650017,
+          "decode_unclamped_max": 448.7459411621094,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 1,
+          "sat_validator_multiply": 1,
+          "expect_sat": 1,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "chef_qkv10_1p005": {
+          "g": 0.002170219784602523,
+          "ratio": 1.0071053155349803,
+          "decode_unclamped_max": 451.1831970214844,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 1,
+          "sat_validator_multiply": 1,
+          "expect_sat": 1,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true,
+          "chef_heldout_ratio": 1.0054313299119013
+        },
+        "median_safe_0p416": {
+          "g": 0.005245209205895662,
+          "ratio": 0.41669260369933425,
+          "decode_unclamped_max": 186.67828369140625,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "exact_ratio_1": {
+          "g": 0.002185639925301075,
+          "ratio": 0.9999999797090575,
+          "decode_unclamped_max": 448.0,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "margin_1p30_foreign": {
+          "g": 0.0028366087935864925,
+          "ratio": 0.7705115650399388,
+          "decode_unclamped_max": 345.1891784667969,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        }
+      },
+      "multiply_divide_1ulp_at_exact_g": false,
+      "pass": true
+    },
+    {
+      "width": 14336,
+      "role": "fc2_input_swiglu_product",
+      "live_t": 6.09375,
+      "live_g": 0.0022735595703125,
+      "live_g_is_bf16_t_over_2688": true,
+      "live_bytes_exact": true,
+      "exact_ratio_is_one": true,
+      "margin_is_foreign_g": true,
+      "margin_vs_twopass_q": 20818640,
+      "cases": {
+        "live_g": {
+          "g": 0.0022735595703125,
+          "ratio": 0.99712368168744,
+          "decode_unclamped_max": 446.7113952636719,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "chef_qkv10_1p005": {
+          "g": 0.002261277986690402,
+          "ratio": 1.0025393174254158,
+          "decode_unclamped_max": 449.1376037597656,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 1,
+          "sat_validator_multiply": 1,
+          "expect_sat": 1,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true,
+          "chef_heldout_ratio": 1.0054313299119013
+        },
+        "median_safe_0p416": {
+          "g": 0.0054652877151966095,
+          "ratio": 0.4148034298326342,
+          "decode_unclamped_max": 185.83193969726562,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        },
+        "exact_ratio_1": {
+          "g": 0.0022670200560241938,
+          "ratio": 1.0000000146719128,
+          "decode_unclamped_max": 448.0,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 1,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": false
+        },
+        "margin_1p30_foreign": {
+          "g": 0.0029556273948401213,
+          "ratio": 0.767018228767075,
+          "decode_unclamped_max": 343.6241760253906,
+          "t_equals_max_block": true,
+          "sat_pack_divide": 0,
+          "sat_validator_multiply": 0,
+          "expect_sat": 0,
+          "pack_matches_expect": true,
+          "multiply_divide_agree": true
+        }
+      },
+      "multiply_divide_1ulp_at_exact_g": true,
+      "pass": true
+    }
+  ],
+  "exclusion_algebra": {
+    "object_wrong": "per-layer max scale + named quarantine",
+    "object_right": "per-call pack decode=absmax/6/G > 448 vs calibrated G",
+    "live_g_is_not_fallback": "two-pass bf16(T/2688) can self-ratio > 1; saturate on live G is the stock association, not 'fall back'",
+    "multiply_vs_divide": "validator T/(G*2688)>1 and pack absmax/6/G>448 agree on 1.005/0.416/live/margin; they can 1-ULP disagree at G=fp32(T/2688). Fallback must name the divide form.",
+    "m130_after_fc2_quarantine": {
+      "blocks.10.attn.qkv_proj": {
+        "width": 5376,
+        "max": 1.0054313299119013,
+        "median": 0.7250220896600895,
+        "overflow_calls": 1,
+        "calls": 20
+      },
+      "blocks.11.attn.qkv_proj": {
+        "width": 5376,
+        "max": 1.0033699633699633,
+        "median": 0.41611721611721614,
+        "overflow_calls": 1,
+        "calls": 20
+      }
+    },
+    "two_seed_unexcluded": {
+      "blocks.49.attn.qkv_proj": 1.0721414640767217,
+      "blocks.48.mlp.fc2": 1.0374150130985875
+    },
+    "do_not": "raise every scale; spikes migrate; do not hook fallback"
+  },
+  "promoted": false,
+  "serving_default": "stock",
+  "one_ulp_multiply_divide_at_exact_g": {
+    "5376": false,
+    "7168": false,
+    "14336": true
+  },
+  "pass": true
+}

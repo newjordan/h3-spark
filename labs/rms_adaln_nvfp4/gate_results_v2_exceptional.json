@@ -1,0 +1,95 @@
+{
+  "activation_dtype": "torch.bfloat16",
+  "all_downstream_bytes_exact": true,
+  "cases": [
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "nan",
+      "fused_global_scale_bits": "0x7fff0000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7fff0000",
+      "source": "x"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "+inf",
+      "fused_global_scale_bits": "0x7fff0000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7fff0000",
+      "source": "x"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "nan",
+      "fused_global_scale_bits": "0x7fff0000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7fff0000",
+      "source": "weight"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "+inf",
+      "fused_global_scale_bits": "0x7f800000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7f800000",
+      "source": "weight"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "nan",
+      "fused_global_scale_bits": "0x7fff0000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7fff0000",
+      "source": "scale"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "+inf",
+      "fused_global_scale_bits": "0x7f800000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7f800000",
+      "source": "scale"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "nan",
+      "fused_global_scale_bits": "0x7fff0000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7fff0000",
+      "source": "shift"
+    },
+    {
+      "block_scale_byte_mismatches": 0,
+      "downstream_bytes_exact": true,
+      "exception": "+inf",
+      "fused_global_scale_bits": "0x7f800000",
+      "global_scale_uint32_exact": true,
+      "packed_byte_mismatches": 0,
+      "reference_global_scale_bits": "0x7f800000",
+      "source": "shift"
+    }
+  ],
+  "eps": 1e-05,
+  "modulation_dtype": "torch.float32",
+  "native_abi_version": 2,
+  "native_build_id": "h3-rms-adaln-nvfp4-sm12-safe-row-v2",
+  "native_sha256": "1038f12df9ebec597cf00f50511c32b088f14799fd2a0833dd8659b7ea1e4955",
+  "rows": 17,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "width": 5376
+}

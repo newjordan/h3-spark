@@ -1,0 +1,250 @@
+{
+  "chef_warm_delta_s": 1.7,
+  "closed": {
+    "hook": "A/B cache off; adapter rejects local/global hooks",
+    "stream": "adapter uses current stream; no extra pin or .item()",
+    "sync": "DiT hot path has zero synchronize; run_every_op is interrupt only"
+  },
+  "decision": "hold",
+  "device": "NVIDIA GB10",
+  "evals": 20,
+  "g_mismatches": 0,
+  "identity": "DiT-only 20-eval A/B at S=20423, 49 transitions: stock gate+rms vs fused gate_rms vs sealed adapter defer+try. Names the FixedRef +1.7 s extra work. No render, no promotion.",
+  "kernel_projection_s": 0.511881,
+  "named_extra_work": "vae_mp4",
+  "named_reason": "DiT-only 20-eval adapter host/GPU still beat stock. Adapter Python ownership is a few ms vs fused, not +1.7 s. Extra FixedRef work is outside the DiT residual chain (VAE decode + MP4 encode + executor).",
+  "one_eval_profile": {
+    "adapter": {
+      "profiler_cbf": 0,
+      "profiler_cpu_ms": 218.595,
+      "profiler_device_kernels": 296,
+      "profiler_device_ms": 227.107,
+      "profiler_launch_api": 196,
+      "top_ops": [
+        {
+          "count": 294,
+          "name": "aten::empty"
+        },
+        {
+          "count": 196,
+          "name": "cudaLaunchKernel"
+        },
+        {
+          "count": 98,
+          "name": "aten::zeros"
+        },
+        {
+          "count": 98,
+          "name": "aten::zero_"
+        },
+        {
+          "count": 98,
+          "name": "aten::fill_"
+        },
+        {
+          "count": 49,
+          "name": "aten::view"
+        },
+        {
+          "count": 49,
+          "name": "aten::to"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul> >(int, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::gate_rms_adaln_first_pass<float>(__nv_bfloat16*, __nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float const*, float const*, int const*, float*, unsigned int*, long, long, long, long, float)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::rms_adaln_nvfp4_second_pass<float>(__nv_bfloat16 const*, __nv_bfloat16 const*, float const*, float const*, int const*, float const*, unsigned int const*, float*, unsigned char*, unsigned char*, long, long, long, long, long)"
+        },
+        {
+          "count": 2,
+          "name": "cudaDeviceSynchronize"
+        }
+      ]
+    },
+    "cbf_visible_in_torch_profiler": false,
+    "fused": {
+      "profiler_cbf": 0,
+      "profiler_cpu_ms": 222.732,
+      "profiler_device_kernels": 296,
+      "profiler_device_ms": 226.412,
+      "profiler_launch_api": 196,
+      "top_ops": [
+        {
+          "count": 245,
+          "name": "aten::empty"
+        },
+        {
+          "count": 196,
+          "name": "cudaLaunchKernel"
+        },
+        {
+          "count": 98,
+          "name": "aten::zeros"
+        },
+        {
+          "count": 98,
+          "name": "aten::zero_"
+        },
+        {
+          "count": 98,
+          "name": "aten::fill_"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul> >(int, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::gate_rms_adaln_first_pass<float>(__nv_bfloat16*, __nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float const*, float const*, int const*, float*, unsigned int*, long, long, long, long, float)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::rms_adaln_nvfp4_second_pass<float>(__nv_bfloat16 const*, __nv_bfloat16 const*, float const*, float const*, int const*, float const*, unsigned int const*, float*, unsigned char*, unsigned char*, long, long, long, long, long)"
+        },
+        {
+          "count": 2,
+          "name": "cudaDeviceSynchronize"
+        },
+        {
+          "count": 1,
+          "name": "aten::clone"
+        },
+        {
+          "count": 1,
+          "name": "aten::empty_strided"
+        }
+      ]
+    },
+    "launch_delta_adapter_minus_fused": 0,
+    "launch_delta_adapter_minus_stock": -294,
+    "stock": {
+      "profiler_cbf": 0,
+      "profiler_cpu_ms": 256.738,
+      "profiler_device_kernels": 590,
+      "profiler_device_ms": 261.538,
+      "profiler_launch_api": 245,
+      "top_ops": [
+        {
+          "count": 245,
+          "name": "aten::empty"
+        },
+        {
+          "count": 196,
+          "name": "cudaLaunchKernel"
+        },
+        {
+          "count": 98,
+          "name": "aten::zeros"
+        },
+        {
+          "count": 98,
+          "name": "aten::zero_"
+        },
+        {
+          "count": 98,
+          "name": "aten::fill_"
+        },
+        {
+          "count": 49,
+          "name": "cuLaunchKernelEx"
+        },
+        {
+          "count": 49,
+          "name": "_segmented_gate_bf16_kernel"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul> >(int, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::rms_adaln_first_pass<float, false, true>(__nv_bfloat16 const*, __nv_bfloat16 const*, float const*, float const*, int const*, float*, __nv_bfloat16*, unsigned int*, long, long, int, long, float)"
+        },
+        {
+          "count": 49,
+          "name": "void (anonymous namespace)::rms_adaln_nvfp4_second_pass<float>(__nv_bfloat16 const*, __nv_bfloat16 const*, float const*, float const*, int const*, float const*, unsigned int const*, float*, unsigned char*, unsigned char*, long, long, long, long, long)"
+        },
+        {
+          "count": 2,
+          "name": "cudaDeviceSynchronize"
+        }
+      ]
+    }
+  },
+  "pass": true,
+  "producer_20_eval": {
+    "adapter": {
+      "gpu_ms": 4377.8853,
+      "gpu_ms_per_eval": 218.8943,
+      "gpu_s": 4.3779,
+      "host_minus_gpu_s": 0.0,
+      "host_ms_per_eval": 218.8946,
+      "host_s": 4.3779
+    },
+    "adapter_gpu_saved_s": 0.719,
+    "adapter_host_saved_s": 0.719,
+    "adapter_minus_fused_host_s": 0.0284,
+    "fused": {
+      "gpu_ms": 4349.4692,
+      "gpu_ms_per_eval": 217.4735,
+      "gpu_s": 4.3495,
+      "host_minus_gpu_s": 0.0,
+      "host_ms_per_eval": 217.4735,
+      "host_s": 4.3495
+    },
+    "stock": {
+      "gpu_ms": 5096.9058,
+      "gpu_ms_per_eval": 254.8453,
+      "gpu_s": 5.0969,
+      "host_minus_gpu_s": 0.0,
+      "host_ms_per_eval": 254.8458,
+      "host_s": 5.0969
+    }
+  },
+  "promoted": false,
+  "q_mismatches": 0,
+  "qkv_20_eval": {
+    "fused": {
+      "gpu_ms": 19480.2305,
+      "gpu_ms_per_eval": 974.0115,
+      "gpu_s": 19.4802,
+      "host_minus_gpu_s": -0.0001,
+      "host_ms_per_eval": 974.0087,
+      "host_s": 19.4802
+    },
+    "fused_host_saved_s": 0.5221,
+    "stock": {
+      "gpu_ms": 20002.3066,
+      "gpu_ms_per_eval": 1000.1153,
+      "gpu_s": 20.0023,
+      "host_minus_gpu_s": -0.0001,
+      "host_ms_per_eval": 1000.1127,
+      "host_s": 20.0023
+    }
+  },
+  "qkv_mismatches": 0,
+  "residual_mismatches": 0,
+  "rows": 20423,
+  "s_mismatches": 0,
+  "serving_default": "stock",
+  "transitions": 49,
+  "width": 5376
+}

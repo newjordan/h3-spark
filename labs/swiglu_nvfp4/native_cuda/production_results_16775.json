@@ -1,0 +1,81 @@
+{
+  "device": "NVIDIA GB10",
+  "torch": "2.13.0+cu130",
+  "rows": 16775,
+  "raw_shape": [
+    16775,
+    28672
+  ],
+  "eager_bf16_rounding": true,
+  "correctness": {
+    "packed_shape": [
+      144,
+      7168
+    ],
+    "scale_shape": [
+      256,
+      896
+    ],
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "packed_mismatched_nibbles": 0,
+    "signed_zero_only": true,
+    "signed_zero_nibble_mismatches": 0,
+    "non_signed_zero_nibble_mismatches": 0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0,
+    "dequant_logical_rows_bit_exact": true,
+    "dequant_logical_rows_numeric_exact": true,
+    "dequant_logical_rows_bit_mismatches": 0
+  },
+  "dynamic_correctness": {
+    "global_scale_exact": true,
+    "reference_global_scale": 0.00433349609375,
+    "native_global_scale": 0.00433349609375,
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "packed_mismatched_nibbles": 0,
+    "signed_zero_only": true,
+    "signed_zero_nibble_mismatches": 0,
+    "non_signed_zero_nibble_mismatches": 0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0,
+    "dequant_logical_rows_bit_exact": true,
+    "dequant_logical_rows_numeric_exact": true,
+    "dequant_logical_rows_max_abs": 0.0
+  },
+  "baseline": {
+    "median_ms": 13.333888053894043,
+    "min_ms": 13.3088960647583,
+    "p90_ms": 13.937439918518066
+  },
+  "fused": {
+    "median_ms": 4.657599925994873,
+    "min_ms": 4.6104960441589355,
+    "p90_ms": 4.846560001373291
+  },
+  "median_speedup": 2.862823828958623,
+  "median_saved_per_layer_ms": 8.67628812789917,
+  "estimated_saved_50_layers_ms": 433.8144063949585,
+  "estimated_saved_50_layers_20_steps_s": 8.67628812789917,
+  "dynamic_timing": {
+    "baseline": {
+      "median_ms": 19.746000289916992,
+      "min_ms": 19.42483139038086,
+      "p90_ms": 20.0897274017334
+    },
+    "native": {
+      "median_ms": 8.973343849182129,
+      "min_ms": 8.946175575256348,
+      "p90_ms": 9.659040451049805
+    },
+    "median_speedup": 2.200517512957751,
+    "median_saved_per_layer_ms": 10.772656440734863,
+    "estimated_saved_50_layers_ms": 538.6328220367432,
+    "estimated_saved_50_layers_20_steps_s": 10.772656440734863
+  }
+}

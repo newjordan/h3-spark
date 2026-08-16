@@ -1,0 +1,81 @@
+{
+  "device": "NVIDIA GB10",
+  "torch": "2.13.0+cu130",
+  "rows": 20423,
+  "raw_shape": [
+    20423,
+    28672
+  ],
+  "eager_bf16_rounding": true,
+  "correctness": {
+    "packed_shape": [
+      144,
+      7168
+    ],
+    "scale_shape": [
+      256,
+      896
+    ],
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "packed_mismatched_nibbles": 0,
+    "signed_zero_only": true,
+    "signed_zero_nibble_mismatches": 0,
+    "non_signed_zero_nibble_mismatches": 0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0,
+    "dequant_logical_rows_bit_exact": true,
+    "dequant_logical_rows_numeric_exact": true,
+    "dequant_logical_rows_bit_mismatches": 0
+  },
+  "dynamic_correctness": {
+    "global_scale_exact": true,
+    "reference_global_scale": 0.00433349609375,
+    "native_global_scale": 0.00433349609375,
+    "packed_byte_exact": true,
+    "scale_byte_exact": true,
+    "packed_mismatches": 0,
+    "packed_mismatch_fraction": 0.0,
+    "packed_mismatched_nibbles": 0,
+    "signed_zero_only": true,
+    "signed_zero_nibble_mismatches": 0,
+    "non_signed_zero_nibble_mismatches": 0,
+    "scale_mismatches": 0,
+    "scale_mismatch_fraction": 0.0,
+    "dequant_logical_rows_bit_exact": true,
+    "dequant_logical_rows_numeric_exact": true,
+    "dequant_logical_rows_max_abs": 0.0
+  },
+  "baseline": {
+    "median_ms": 16.43056011199951,
+    "min_ms": 16.104736328125,
+    "p90_ms": 16.964736938476562
+  },
+  "fused": {
+    "median_ms": 5.692944049835205,
+    "min_ms": 5.570943832397461,
+    "p90_ms": 5.8288960456848145
+  },
+  "median_speedup": 2.8861271019298234,
+  "median_saved_per_layer_ms": 10.737616062164307,
+  "estimated_saved_50_layers_ms": 536.8808031082153,
+  "estimated_saved_50_layers_20_steps_s": 10.737616062164307,
+  "dynamic_timing": {
+    "baseline": {
+      "median_ms": 23.811280250549316,
+      "min_ms": 23.564512252807617,
+      "p90_ms": 24.325504302978516
+    },
+    "native": {
+      "median_ms": 11.034608364105225,
+      "min_ms": 10.898752212524414,
+      "p90_ms": 12.54684829711914
+    },
+    "median_speedup": 2.157872709647374,
+    "median_saved_per_layer_ms": 12.776671886444092,
+    "estimated_saved_50_layers_ms": 638.8335943222046,
+    "estimated_saved_50_layers_20_steps_s": 12.776671886444092
+  }
+}

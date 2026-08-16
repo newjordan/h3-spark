@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GB10",
+  "identity": "amax+pack tiled to the cuBLAS 128x4 E4M3 slab; same eager SwiGLU and NVFP4 algebra as the 8-wide two-pass",
+  "pass": true,
+  "rows": 20423,
+  "saved_ms": -9.7896,
+  "saved_vs_vec_ms": -10.0592,
+  "swizzle_min_ms": 20.6702,
+  "swizzle_vs_eager_q": 0,
+  "swizzle_vs_eager_s": 0,
+  "swizzle_vs_eager_scale_exact": true,
+  "swizzle_vs_twopass_q": 0,
+  "swizzle_vs_twopass_s": 0,
+  "swizzle_vs_twopass_scale_exact": true,
+  "twopass_min_ms": 10.8806,
+  "vec_min_ms": 10.611,
+  "width": 28672
+}

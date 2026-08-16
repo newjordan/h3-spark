@@ -1,0 +1,328 @@
+{
+  "identity": "CBF named barrier #9 aten::zeros 400 = 8/block is NVFP4 algebra on the four int32 max_bits slabs (atomicMax must start at 0) and an allocation identity on the four uint8 cuBLAS scale tiles after one zero (used slots are fully rewritten; 128-row padding must stay 0). A reused zero-once workspace is not byte-exact vs per-call aten::zeros at S=20423: leftover max_bits > live T is a foreign G. Same-input leftover == T is exact. Scale-only reuse of a previously zeroed slab is byte-exact. Persistent workspace cannot drop the 4 int32 fills. Not patched. Not promoted.",
+  "device": "NVIDIA GB10",
+  "rows": 20423,
+  "rows_profile": 20393,
+  "blocks": 50,
+  "aten_zeros": 400,
+  "zeros_per_block": 8,
+  "tensors_per_block": [
+    {
+      "slot": 1,
+      "name": "qkv.rms_adaln_nvfp4.max_bits",
+      "producer": "rms_adaln_nvfp4_dynamic",
+      "dtype": "int32",
+      "shape": [
+        1
+      ],
+      "role": "atomicMax start for QKV AdaLN amax",
+      "width": 5376,
+      "profile_kernel": "rms_adaln_first_pass / rms_adaln_second_pass"
+    },
+    {
+      "slot": 2,
+      "name": "qkv.rms_adaln_nvfp4.block_scales",
+      "producer": "rms_adaln_nvfp4_dynamic",
+      "dtype": "uint8",
+      "shape": [
+        20480,
+        336
+      ],
+      "role": "cuBLAS E4M3 scale tile, padded to 128 rows",
+      "width": 5376,
+      "profile_kernel": "rms_adaln_second_pass"
+    },
+    {
+      "slot": 3,
+      "name": "mlp.gate_rms_adaln_nvfp4.max_bits",
+      "producer": "gate_rms_adaln_nvfp4_dynamic",
+      "dtype": "int32",
+      "shape": [
+        1
+      ],
+      "role": "atomicMax start for MLP AdaLN amax",
+      "width": 5376,
+      "profile_kernel": "gate_rms_adaln_first_pass / rms_adaln_second_pass"
+    },
+    {
+      "slot": 4,
+      "name": "mlp.gate_rms_adaln_nvfp4.block_scales",
+      "producer": "gate_rms_adaln_nvfp4_dynamic",
+      "dtype": "uint8",
+      "shape": [
+        20480,
+        336
+      ],
+      "role": "cuBLAS E4M3 scale tile, padded to 128 rows",
+      "width": 5376,
+      "profile_kernel": "rms_adaln_second_pass"
+    },
+    {
+      "slot": 5,
+      "name": "attn.sage_output_amax.max_bits",
+      "producer": "qk_int8_sv_f8_..._with_output_amax",
+      "dtype": "int32",
+      "shape": [
+        1
+      ],
+      "role": "atomicMax start for Sage output amax; consumed by bf16_nvfp4_from_amax_bits (no second int32 zeros)",
+      "width": 7168,
+      "profile_kernel": "sageattention_sm89::..._with_output_amax"
+    },
+    {
+      "slot": 6,
+      "name": "attn.bf16_nvfp4_from_amax_bits.block_scales",
+      "producer": "bf16_nvfp4_from_amax_bits",
+      "dtype": "uint8",
+      "shape": [
+        20480,
+        448
+      ],
+      "role": "cuBLAS E4M3 scale tile, padded to 128 rows",
+      "width": 7168,
+      "profile_kernel": "bf16_nvfp4_kernel<true> (50; no bf16_amax kernel)"
+    },
+    {
+      "slot": 7,
+      "name": "mlp.swiglu_nvfp4_dynamic.max_bits",
+      "producer": "swiglu_nvfp4_dynamic",
+      "dtype": "int32",
+      "shape": [
+        1
+      ],
+      "role": "atomicMax start for SwiGLU product amax",
+      "width": 14336,
+      "profile_kernel": "swiglu_amax_bf16_bits_kernel"
+    },
+    {
+      "slot": 8,
+      "name": "mlp.swiglu_nvfp4.block_scales",
+      "producer": "swiglu_nvfp4 / swiglu_nvfp4_dynamic",
+      "dtype": "uint8",
+      "shape": [
+        20480,
+        896
+      ],
+      "role": "cuBLAS E4M3 scale tile, padded to 128 rows; comment: rows beyond padded_rows must be deterministic zero",
+      "width": 14336,
+      "profile_kernel": "swiglu_nvfp4_kernel<true>"
+    }
+  ],
+  "profile": {
+    "source_txt": "$HOME/h3/results/accepted_stack_20260812.txt",
+    "source_json": "benchmarks/profiles/accepted_stack_20260812.json",
+    "parsed": {
+      "sage_output_amax": 50,
+      "swiglu_amax": 50,
+      "swiglu_pack": 50,
+      "rms_second": 100,
+      "gate_rms_first": 50,
+      "bf16_pack": 50,
+      "rms_first": 50,
+      "aten_zeros": 400,
+      "fill_uint8": 200,
+      "fill_int32": 200
+    },
+    "ok": true,
+    "no_bf16_amax_kernel": true
+  },
+  "geometry": {
+    "padded_rows": 20432,
+    "scale_rows": 20480,
+    "unwritten_rows": 48,
+    "swiglu_unwritten_bytes": 43008,
+    "attn_unwritten_bytes": 21504,
+    "rms_unwritten_bytes": 16128
+  },
+  "swiglu": {
+    "live_abs_bits": 16778,
+    "leftover_abs_bits": 16842,
+    "g_live": 0.00640869140625,
+    "g_leftover": 0.0093994140625,
+    "g_dyn": 0.00640869140625,
+    "dyn_vs_pack_live_q": 0,
+    "dyn_vs_pack_live_s": 0,
+    "dyn_vs_formula_g_bits": true,
+    "dirty_g_vs_live_q": 10748363,
+    "dirty_g_vs_live_s": 18299008,
+    "scale_tail": {
+      "scale_rows": 20480,
+      "scale_cols": 896,
+      "padded_rows": 20432,
+      "unwritten_count": 43008,
+      "unwritten_all_zero": true,
+      "unwritten_nonzero": 0,
+      "dirty_tail_vs_stock": 43008,
+      "algebra_padding_must_be_zero": true
+    }
+  },
+  "swiglu_same_input_reuse": {
+    "live_abs_bits": 16778,
+    "leftover_abs_bits": 16778,
+    "g_live": 0.00640869140625,
+    "g_leftover": 0.00640869140625,
+    "g_dyn": 0.00640869140625,
+    "dyn_vs_pack_live_q": 0,
+    "dyn_vs_pack_live_s": 0,
+    "dyn_vs_formula_g_bits": true,
+    "dirty_g_vs_live_q": 0,
+    "dirty_g_vs_live_s": 0,
+    "scale_tail": {
+      "scale_rows": 20480,
+      "scale_cols": 896,
+      "padded_rows": 20432,
+      "unwritten_count": 43008,
+      "unwritten_all_zero": true,
+      "unwritten_nonzero": 0,
+      "dirty_tail_vs_stock": 43008,
+      "algebra_padding_must_be_zero": true
+    }
+  },
+  "swiglu_small_with_large_leftover": {
+    "live_abs_bits": 15558,
+    "leftover_abs_bits": 16778,
+    "g_live": 9.000301361083984e-06,
+    "g_leftover": 0.00640869140625,
+    "g_dyn": 9.000301361083984e-06,
+    "dyn_vs_pack_live_q": 0,
+    "dyn_vs_pack_live_s": 0,
+    "dyn_vs_formula_g_bits": true,
+    "dirty_g_vs_live_q": 15020491,
+    "dirty_g_vs_live_s": 18299008,
+    "scale_tail": {
+      "scale_rows": 20480,
+      "scale_cols": 896,
+      "padded_rows": 20432,
+      "unwritten_count": 43008,
+      "unwritten_all_zero": true,
+      "unwritten_nonzero": 0,
+      "dirty_tail_vs_stock": 43008,
+      "algebra_padding_must_be_zero": true
+    }
+  },
+  "bf16_nvfp4": {
+    "w5376_leftover": {
+      "width": 5376,
+      "live_abs_bits": 16564,
+      "leftover_abs_bits": 16842,
+      "atomicMax_result_bits": 16842,
+      "leftover_gt_live": true,
+      "g_live": 0.0020904541015625,
+      "g_leftover": 0.0093994140625,
+      "g_dyn": 0.0020904541015625,
+      "dyn_vs_from_live_q": 0,
+      "dyn_vs_from_live_s": 0,
+      "dyn_vs_from_live_g_bits": true,
+      "from_live_vs_g_formula": true,
+      "dirty_vs_live_q": 6725743,
+      "dirty_vs_live_s": 6862128,
+      "dirty_vs_live_g_bits": true,
+      "same_input_reuse_exact": false,
+      "zero_once_smaller_t_exact": false,
+      "scale_rows": 20480,
+      "scale_cols": 336,
+      "padded_rows": 20432
+    },
+    "w5376_same": {
+      "width": 5376,
+      "live_abs_bits": 16564,
+      "leftover_abs_bits": 16564,
+      "atomicMax_result_bits": 16564,
+      "leftover_gt_live": false,
+      "g_live": 0.0020904541015625,
+      "g_leftover": 0.0020904541015625,
+      "g_dyn": 0.0020904541015625,
+      "dyn_vs_from_live_q": 0,
+      "dyn_vs_from_live_s": 0,
+      "dyn_vs_from_live_g_bits": true,
+      "from_live_vs_g_formula": true,
+      "dirty_vs_live_q": 0,
+      "dirty_vs_live_s": 0,
+      "dirty_vs_live_g_bits": true,
+      "same_input_reuse_exact": true,
+      "zero_once_smaller_t_exact": true,
+      "scale_rows": 20480,
+      "scale_cols": 336,
+      "padded_rows": 20432
+    },
+    "w7168_leftover": {
+      "width": 7168,
+      "live_abs_bits": 16598,
+      "leftover_abs_bits": 16842,
+      "atomicMax_result_bits": 16842,
+      "leftover_gt_live": true,
+      "g_live": 0.0024871826171875,
+      "g_leftover": 0.0093994140625,
+      "g_dyn": 0.0024871826171875,
+      "dyn_vs_from_live_q": 0,
+      "dyn_vs_from_live_s": 0,
+      "dyn_vs_from_live_g_bits": true,
+      "from_live_vs_g_formula": true,
+      "dirty_vs_live_q": 12116469,
+      "dirty_vs_live_s": 9149504,
+      "dirty_vs_live_g_bits": true,
+      "same_input_reuse_exact": false,
+      "zero_once_smaller_t_exact": false,
+      "scale_rows": 20480,
+      "scale_cols": 448,
+      "padded_rows": 20432
+    },
+    "w14336_leftover": {
+      "width": 14336,
+      "live_abs_bits": 16578,
+      "leftover_abs_bits": 16842,
+      "atomicMax_result_bits": 16842,
+      "leftover_gt_live": true,
+      "g_live": 0.00225830078125,
+      "g_leftover": 0.0093994140625,
+      "g_dyn": 0.00225830078125,
+      "dyn_vs_from_live_q": 0,
+      "dyn_vs_from_live_s": 0,
+      "dyn_vs_from_live_g_bits": true,
+      "from_live_vs_g_formula": true,
+      "dirty_vs_live_q": 26647948,
+      "dirty_vs_live_s": 18299008,
+      "dirty_vs_live_g_bits": true,
+      "same_input_reuse_exact": false,
+      "zero_once_smaller_t_exact": false,
+      "scale_rows": 20480,
+      "scale_cols": 896,
+      "padded_rows": 20432
+    }
+  },
+  "scale_reuse_two_draws": {
+    "swiglu": {
+      "unwritten_a_zero": true,
+      "unwritten_b_zero": true,
+      "written_differ": 17545048,
+      "unwritten_same_set": true,
+      "zero_once_scale_reuse_byte_exact": true
+    },
+    "bf16_5376": {
+      "unwritten_a_zero": true,
+      "unwritten_b_zero": true,
+      "written_differ": 6092617,
+      "unwritten_same_set": true,
+      "zero_once_scale_reuse_byte_exact": true
+    }
+  },
+  "verdict": {
+    "object": "max_bits algebra + scale padding algebra; scale used-region is an overwrite identity",
+    "zero_once_workspace_byte_exact": false,
+    "max_bits_must_fresh_zero": true,
+    "scale_slab_zero_once_byte_exact": true,
+    "same_input_max_bits_reuse_byte_exact": true,
+    "leftover_gt_T_breaks_G": true,
+    "live_dyn_matches_from_bits": true,
+    "cannot_drop_int32_fills": true,
+    "persistent_plus_per_call_zero_same_bytes": true
+  },
+  "pass": true,
+  "patched_serving": false,
+  "promoted": false,
+  "serving_default": "stock",
+  "serving_so": "$HOME/comfyui-h3-current/comfy/ldm/minimax/swiglu_nvfp4_native_v1.so",
+  "serving_sha256": "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f",
+  "serving_sha256_expected": "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f",
+  "serving_sha256_match": true
+}

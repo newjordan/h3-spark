@@ -1,0 +1,72 @@
+--- a/comfy/ldm/minimax/rms_adaln_nvfp4_static.py
++++ b/comfy/ldm/minimax/rms_adaln_nvfp4_static.py
+@@ -32,7 +32,7 @@
+     _norm_eligible,
+     _tensor_inputs_eligible,
+ )
+-from comfy.ldm.minimax.swiglu_nvfp4 import BRIDGE_ATTRS, HOOK_ATTRS, NVFP4_LAYOUT
++from comfy.ldm.minimax.swiglu_nvfp4 import BRIDGE_ATTRS, NVFP4_LAYOUT
+ from comfy.ops import cast_bias_weight, run_every_op, uncast_bias_weight
+ from comfy.quant_ops import QuantizedTensor, TensorCoreNVFP4Layout
+ 
+@@ -120,10 +120,6 @@
+         return None
+ 
+ 
+-def _linear_has_hooks(linear) -> bool:
+-    return any(bool(getattr(linear, name, None)) for name in HOOK_ATTRS)
+-
+-
+ def _bridge_state(linear) -> str:
+     """Return absent, partial, or complete without reading bridge values."""
+     present = tuple(hasattr(linear, name) for name in BRIDGE_ATTRS)
+@@ -169,6 +165,13 @@
+         eps = torch.finfo(x.dtype).eps
+ 
+     run_every_op()
++    if (
++        _bridge_state(linear) != "complete"
++        or not _norm_eligible(norm, x)
++        or not _linear_eligible(linear, x)
++        or _static_scale(linear, x) is not input_scale
++    ):
++        return None
+     norm_weight, norm_bias, norm_offload_stream = cast_bias_weight(
+         norm,
+         x,
+@@ -176,7 +179,13 @@
+         compute_dtype=x.dtype,
+     )
+     try:
+-        if not _cast_norm_weight_eligible(norm_weight, norm_bias, x):
++        if (
++            not _cast_norm_weight_eligible(norm_weight, norm_bias, x)
++            or _bridge_state(linear) != "complete"
++            or not _norm_eligible(norm, x)
++            or not _linear_eligible(linear, x)
++            or _static_scale(linear, x) is not input_scale
++        ):
+             return None
+         # Complete quantization before casting the Linear. DynamicVRAM/AIMDO
+         # may reuse the same asynchronous cast buffer for the next module.
+@@ -212,7 +221,11 @@
+     )
+     try:
+         if (
+-            not isinstance(weight, QuantizedTensor)
++            _bridge_state(linear) != "complete"
++            or not _norm_eligible(norm, x)
++            or not _linear_eligible(linear, x)
++            or _static_scale(linear, x) is not input_scale
++            or not isinstance(weight, QuantizedTensor)
+             or weight._layout_cls != NVFP4_LAYOUT
+             or getattr(weight._params, "transposed", False)
+         ):
+@@ -264,7 +277,6 @@
+         or not _spark_device_eligible(getattr(x, "device", None))
+         or not _norm_eligible(norm, x)
+         or not _linear_eligible(linear, x)
+-        or _linear_has_hooks(linear)
+     ):
+         return None
+ 

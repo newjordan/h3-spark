@@ -1,0 +1,601 @@
+diff --git a/comfy/ldm/minimax/linear_nvfp4.py b/comfy/ldm/minimax/linear_nvfp4.py
+index ab89c1a..4b702f6 100644
+--- a/comfy/ldm/minimax/linear_nvfp4.py
++++ b/comfy/ldm/minimax/linear_nvfp4.py
+@@ -25,6 +25,7 @@ H3_LINEAR_SHAPES = frozenset(
+         (5376, 28672),  # MLP gate/up
+     }
+ )
++H3_SUPPLIED_AMAX_BUILD_ID = "h3-nvfp4-supplied-amax-v1-torch2.13-sm120"
+ 
+ 
+ def _raw_eligible(x):
+@@ -41,12 +42,12 @@ def _raw_eligible(x):
+     )
+ 
+ 
+-def _linear_eligible(linear, x):
++def _linear_config_eligible(linear, input_features):
+     weight = getattr(linear, "weight", None)
+     return (
+         not comfy.model_management.in_training
+         and (getattr(linear, "in_features", None), getattr(linear, "out_features", None)) in H3_LINEAR_SHAPES
+-        and getattr(linear, "in_features", None) == x.shape[1]
++        and getattr(linear, "in_features", None) == input_features
+         and getattr(linear, "bias", None) is None
+         and getattr(linear, "quant_format", None) == "nvfp4"
+         and getattr(linear, "layout_type", None) == NVFP4_LAYOUT
+@@ -63,6 +64,10 @@ def _linear_eligible(linear, x):
+     )
+ 
+ 
++def _linear_eligible(linear, x):
++    return _linear_config_eligible(linear, x.shape[1])
++
++
+ def _static_scale(linear, x):
+     shapes = getattr(linear, BRIDGE_ATTRS[1], None)
+     dtypes = getattr(linear, BRIDGE_ATTRS[2], None)
+@@ -141,4 +146,110 @@ def try_linear(linear, x, mode):
+         uncast_bias_weight(linear, weight, bias, offload_stream)
+ 
+ 
+-__all__ = ["try_linear"]
++def _from_amax_eligible(linear, x, mode, max_bits=None):
++    if (
++        mode != "auto"
++        or torch.is_grad_enabled()
++        or not _raw_eligible(x)
++        or tuple(x.shape[1:]) != (7168,)
++        or (getattr(linear, "in_features", None), getattr(linear, "out_features", None)) != (7168, 5376)
++        or not _dynamic_eligible(linear)
++        or not _linear_eligible(linear, x)
++    ):
++        return False
++    return max_bits is None or (
++        isinstance(max_bits, torch.Tensor)
++        and max_bits.dtype == torch.int32
++        and max_bits.numel() == 1
++        and max_bits.is_cuda
++        and max_bits.device == x.device
++        and max_bits.is_contiguous()
++        and not max_bits.requires_grad
++    )
++
++
++def _supplied_amax_native():
++    """Return only the exact additive supplied-amax ABI.
++
++    Keep this check out of the shared loader so an older extension can still
++    serve the already-qualified dynamic/direct/SwiGLU routes.  Capability
++    mismatch fails closed before the attention producer mutates Q/K.
++    """
++    native = _load_native()
++    build_id = getattr(native, "h3_supplied_amax_build_id", None)
++    quantize = getattr(native, "bf16_nvfp4_from_amax_bits", None)
++    if not callable(build_id) or not callable(quantize):
++        return None
++    try:
++        return native if build_id() == H3_SUPPLIED_AMAX_BUILD_ID else None
++    except (OSError, RuntimeError):
++        return None
++
++
++def can_linear_from_amax_bits(linear, x, mode):
++    if not _from_amax_eligible(linear, x, mode):
++        return False
++    return _supplied_amax_native() is not None
++
++
++def can_linear_from_amax_bits_for_output(linear, rows, device, dtype, mode):
++    """Preflight H3's freshly allocated contiguous attention output."""
++    device = torch.device(device)
++    if not (
++        mode == "auto"
++        and not torch.is_grad_enabled()
++        and isinstance(rows, int)
++        and rows > 0
++        and device.type == "cuda"
++        and _cuda_device_supported(device)
++        and dtype == torch.bfloat16
++        and _dynamic_eligible(linear)
++        and _linear_config_eligible(linear, 7168)
++        and (getattr(linear, "in_features", None), getattr(linear, "out_features", None))
++        == (7168, 5376)
++    ):
++        return False
++    return _supplied_amax_native() is not None
++
++
++def try_linear_from_amax_bits(linear, x, max_bits, mode):
++    """Use an exact producer amax for H3's attention output projection."""
++    if not _from_amax_eligible(linear, x, mode, max_bits):
++        return None
++
++    native = _supplied_amax_native()
++    if native is None:
++        return None
++    quantize = getattr(native, "bf16_nvfp4_from_amax_bits", None)
++
++    run_every_op()
++    weight, bias, offload_stream = cast_bias_weight(
++        linear, x, offloadable=True, compute_dtype=x.dtype, want_requant=True
++    )
++    try:
++        if (
++            not isinstance(weight, QuantizedTensor)
++            or weight._layout_cls != NVFP4_LAYOUT
++            or getattr(weight._params, "transposed", False)
++        ):
++            return None
++        qdata, block_scale, scale = quantize(x, max_bits)
++        params = TensorCoreNVFP4Layout.Params(
++            scale=scale,
++            orig_dtype=x.dtype,
++            orig_shape=tuple(x.shape),
++            block_scale=block_scale.view(torch.float8_e4m3fn),
++        )
++        qinput = QuantizedTensor(qdata, NVFP4_LAYOUT, params)
++        return torch.nn.functional.linear(qinput, weight, bias)
++    finally:
++        uncast_bias_weight(linear, weight, bias, offload_stream)
++
++
++__all__ = [
++    "H3_SUPPLIED_AMAX_BUILD_ID",
++    "can_linear_from_amax_bits",
++    "can_linear_from_amax_bits_for_output",
++    "try_linear",
++    "try_linear_from_amax_bits",
++]
+diff --git a/comfy/ldm/minimax/model.py b/comfy/ldm/minimax/model.py
+index 2e1b8be..9941c5d 100644
+--- a/comfy/ldm/minimax/model.py
++++ b/comfy/ldm/minimax/model.py
+@@ -38,7 +38,12 @@ from comfy.ldm.minimax.adaln_nvfp4 import (
+ )
+ from comfy.ldm.minimax.rms_adaln_nvfp4 import try_linear as try_rms_adaln_nvfp4_linear
+ from comfy.ldm.minimax.gate_rms_adaln_nvfp4 import try_mlp_transition as try_gate_rms_adaln_nvfp4_mlp
+-from comfy.ldm.minimax.linear_nvfp4 import try_linear as try_nvfp4_linear
++from comfy.ldm.minimax.linear_nvfp4 import (
++    can_linear_from_amax_bits,
++    can_linear_from_amax_bits_for_output,
++    try_linear as try_nvfp4_linear,
++    try_linear_from_amax_bits as try_nvfp4_linear_from_amax_bits,
++)
+ from comfy.ldm.minimax.swiglu_nvfp4 import try_linear as try_swiglu_nvfp4_linear
+ 
+ FRAME_PER_TOKEN = (1, 4, 4, 4, 4)
+@@ -47,6 +52,14 @@ VISUAL_COND_TIMESTEP = 0.999
+ AUDIO_COND_TIMESTEP = 1.0
+ 
+ 
++class H3AttentionAmaxMarker:
++    __slots__ = ("bits", "owner")
++
++    def __init__(self, bits, owner):
++        self.bits = bits
++        self.owner = owner
++
++
+ def _h3_linear(linear, x, transformer_options):
+     mode = transformer_options.get(
+         "minimax_h3_linear_nvfp4_fusion",
+@@ -177,6 +190,44 @@ class Attention(nn.Module):
+             qw = comfy.model_management.cast_to(self.q_norm.weight, device=qkv.device)
+             kw = comfy.model_management.cast_to(self.k_norm.weight, device=qkv.device)
+             rot = rope_freqs.shape[-3] * 2
++            q_fusion = transformer_options.get("minimax_h3_q_rms_rope_int8", None)
++            override = transformer_options.get("optimized_attention_override", None)
++            mode = transformer_options.get(
++                "minimax_h3_linear_nvfp4_fusion",
++                transformer_options.get("minimax_h3_swiglu_nvfp4_fusion", "stock"),
++            )
++            if (
++                callable(getattr(q_fusion, "can_call", None))
++                and callable(q_fusion)
++                and getattr(q_fusion, "owner", None) is override
++                and not comfy.model_management.in_training
++                and not torch.is_grad_enabled()
++                and not any(tensor.requires_grad for tensor in (q, k, v, rope_freqs, qw, kw))
++                and not transformer_options.get("patches", {})
++                and not transformer_options.get("patches_replace", {})
++                and can_linear_from_amax_bits_for_output(
++                    self.out_proj, s, qkv.device, qkv.dtype, mode
++                )
++                and q_fusion.can_call(
++                    q, k, v.unsqueeze(0), rope_freqs, qw, kw,
++                    self.q_norm.eps, self.heads, mask=None, scale=None,
++                )
++            ):
++                out, marker = q_fusion(
++                    q, k, v.unsqueeze(0), rope_freqs, qw, kw,
++                    self.q_norm.eps, self.heads, mask=None, scale=None,
++                )
++                if not (
++                    isinstance(marker, H3AttentionAmaxMarker)
++                    and marker.owner is q_fusion
++                ):
++                    raise RuntimeError("H3 Q fusion returned an invalid provenance marker")
++                fused = try_nvfp4_linear_from_amax_bits(
++                    self.out_proj, out.squeeze(0), marker.bits, mode
++                )
++                if fused is None:
++                    raise RuntimeError("H3 Q fusion lost its projection capability after launch")
++                return fused
+             if comfy.model_management.in_training:
+                 q, k = comfy.quant_ops.ck.rms_rope_split_half(
+                     q, k, rope_freqs, qw, kw, epsilon=self.q_norm.eps, rot_dim=rot)
+@@ -194,7 +245,42 @@ class Attention(nn.Module):
+         q = q.reshape(1, s, self.heads * self.head_dim)
+         k = k.reshape(1, s, self.heads * self.head_dim)
+         v = v.reshape(1, s, self.heads * self.head_dim)
+-        out = optimized_attention(q, k, v, self.heads, mask=None, skip_reshape=False, transformer_options=transformer_options)
++        producer = transformer_options.get("minimax_h3_attention_output_amax", None)
++        override = transformer_options.get("optimized_attention_override", None)
++        mode = transformer_options.get(
++            "minimax_h3_linear_nvfp4_fusion",
++            transformer_options.get("minimax_h3_swiglu_nvfp4_fusion", "stock"),
++        )
++        produced = None
++        if (
++            callable(getattr(producer, "try_call", None))
++            and getattr(producer, "owner", None) is override
++            and not comfy.model_management.in_training
++            and not torch.is_grad_enabled()
++            and not any(tensor.requires_grad for tensor in (q, k, v))
++            and not transformer_options.get("patches", {})
++            and not transformer_options.get("patches_replace", {})
++            and can_linear_from_amax_bits(self.out_proj, q.squeeze(0), mode)
++        ):
++            produced = producer.try_call(
++                q, k, v, self.heads, mask=None, skip_reshape=False
++            )
++        if produced is not None:
++            out, marker = produced
++            if not (
++                isinstance(marker, H3AttentionAmaxMarker)
++                and marker.owner is producer
++            ):
++                marker = None
++        else:
++            out = optimized_attention(q, k, v, self.heads, mask=None, skip_reshape=False, transformer_options=transformer_options)
++            marker = None
++        if marker is not None:
++            fused = try_nvfp4_linear_from_amax_bits(
++                self.out_proj, out.squeeze(0), marker.bits, mode
++            )
++            if fused is not None:
++                return fused
+         return _h3_linear(self.out_proj, out.squeeze(0), transformer_options)
+ 
+     def forward(self, x, rope_freqs=None, transformer_options={}):
+diff --git a/comfy/ldm/minimax/q_rms_rope_int8.py b/comfy/ldm/minimax/q_rms_rope_int8.py
+new file mode 100644
+index 0000000..c416371
+--- /dev/null
++++ b/comfy/ldm/minimax/q_rms_rope_int8.py
+@@ -0,0 +1,127 @@
++"""Fail-closed Python facade for the isolated H3 fused Q preprocessing lab."""
++
++from __future__ import annotations
++
++import math
++import importlib.util
++import os
++from pathlib import Path
++
++import torch
++
++
++_MODULE_NAME = "h3_q_rms_rope_int8_native_v1"
++_HERE = Path(__file__).resolve().parent
++_DEFAULT_LIBRARY = _HERE / "build" / f"{_MODULE_NAME}.so"
++_LIBRARY_ENV = "H3_Q_RMS_ROPE_INT8_LIBRARY"
++_BUILD_ID = "h3-q-rms-rope96-qint8-v3-torch2.13-sm120"
++_TORCH_VERSION = "2.13.0+cu130"
++_TORCH_GIT = "cf30153c4c131c8164ee7798e5022d810682e2cb"
++_CUDA_VERSION = "13.0"
++_DEVICE_CAPABILITY = (12, 1)
++
++
++def _runtime_supported(device=None) -> bool:
++    if (
++        torch.__version__ != _TORCH_VERSION
++        or torch.version.git_version != _TORCH_GIT
++        or torch.version.cuda != _CUDA_VERSION
++        or not torch.cuda.is_available()
++    ):
++        return False
++    try:
++        target = torch.device(device) if device is not None else torch.device("cuda")
++        index = torch.cuda.current_device() if target.index is None else target.index
++        return torch.cuda.get_device_capability(index) == _DEVICE_CAPABILITY
++    except (AssertionError, RuntimeError):
++        return False
++
++
++def _load_native():
++    if not _runtime_supported():
++        return None
++    configured = os.environ.get(_LIBRARY_ENV)
++    path = Path(configured).expanduser() if configured else _DEFAULT_LIBRARY
++    if not path.is_file():
++        return None
++    try:
++        spec = importlib.util.spec_from_file_location(_MODULE_NAME, path)
++        if spec is None or spec.loader is None:
++            return None
++        module = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(module)
++    except (ImportError, OSError, RuntimeError):
++        return None
++    try:
++        build_id = module.build_id()
++    except (AttributeError, RuntimeError):
++        return None
++    if build_id != _BUILD_ID:
++        return None
++    return module
++
++
++_NATIVE = _load_native()
++
++
++def available(device=None) -> bool:
++    return _runtime_supported(device) and callable(
++        getattr(_NATIVE, "qk_rms_rope_q_int8", None)
++    )
++
++
++def eligible(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    freqs: torch.Tensor,
++    q_weight: torch.Tensor,
++    k_weight: torch.Tensor,
++    epsilon: float,
++) -> bool:
++    tensors = (q, k, freqs, q_weight, k_weight)
++    return bool(
++        all(isinstance(t, torch.Tensor) for t in tensors)
++        and available(q.device)
++        and not torch.is_grad_enabled()
++        and all(t.is_cuda and t.dtype is torch.bfloat16 for t in tensors)
++        and all(not t.requires_grad for t in tensors)
++        and q.shape == k.shape
++        and q.ndim == 4
++        and q.shape[0] == 1
++        and q.shape[1] > 1024
++        and q.shape[2:] == (56, 128)
++        and q.stride(-1) == k.stride(-1) == 1
++        and q.stride(-2) == k.stride(-2) == 128
++        and q.stride(1) == k.stride(1) == 21504
++        and q.stride(0) == k.stride(0) == q.shape[1] * 21504
++        and k.storage_offset() == q.storage_offset() + 7168
++        and q.untyped_storage().data_ptr() == k.untyped_storage().data_ptr()
++        and freqs.shape == (1, q.shape[1], 1, 48, 2, 2)
++        and freqs.is_contiguous()
++        and q_weight.shape == k_weight.shape == (128,)
++        and q_weight.is_contiguous()
++        and k_weight.is_contiguous()
++        and all(t.device == q.device for t in tensors)
++        and float(epsilon) == 1e-5
++        and math.isfinite(float(epsilon))
++        and float(epsilon) > 0.0
++    )
++
++
++def try_qk_rms_rope_q_int8(
++    q: torch.Tensor,
++    k: torch.Tensor,
++    freqs: torch.Tensor,
++    q_weight: torch.Tensor,
++    k_weight: torch.Tensor,
++    epsilon: float,
++    warps_per_block: int = 16,
++):
++    """Return ``(q_int8, q_scale, k)`` or ``None`` before any launch."""
++    if not eligible(q, k, freqs, q_weight, k_weight, epsilon):
++        return None
++    if warps_per_block not in (8, 16, 32):
++        return None
++    return _NATIVE.qk_rms_rope_q_int8(
++        q, k, freqs, q_weight, k_weight, float(epsilon), warps_per_block
++    )
+diff --git a/custom_nodes/h3_sage_attention.py b/custom_nodes/h3_sage_attention.py
+index 828cf7e..66c385d 100644
+--- a/custom_nodes/h3_sage_attention.py
++++ b/custom_nodes/h3_sage_attention.py
+@@ -13,6 +13,9 @@ import math
+ import torch
+ import torch.nn.functional as F
+ 
++from comfy.ldm.minimax.model import H3AttentionAmaxMarker
++from comfy.ldm.minimax import q_rms_rope_int8
++
+ 
+ class H3SageAttentionOverride:
+     def __init__(self, mode: str, calibrate_first_call: bool):
+@@ -151,6 +154,125 @@ class H3SageAttentionOverride:
+         return candidate.reshape(batch, seq, heads * dim)
+ 
+ 
++class H3SageAttentionOutputAmax:
++    def __init__(self, owner):
++        self.owner = owner
++
++    def try_call(self, q, k, v, heads, mask=None, skip_reshape=False):
++        if (
++            self.owner.mode != "quality"
++            or (self.owner.calibrate_first_call and not self.owner.calibrated)
++            or not self.owner._eligible(q, k, v, heads, mask, skip_reshape)
++            or skip_reshape
++            or q.dtype != torch.bfloat16
++            or q.shape[0] != 1
++            or heads != 56
++            or q.shape[-1] != 7168
++        ):
++            return None
++
++        try:
++            from sageattention import (
++                sageattn_output_amax_available,
++                sageattn_qk_int8_pv_fp8_cuda_with_output_amax,
++            )
++            if not sageattn_output_amax_available():
++                return None
++        except (ImportError, OSError, RuntimeError):
++            return None
++
++        batch, seq, inner = q.shape
++        dim = inner // heads
++        q_s = q.reshape(batch, seq, heads, dim)
++        k_s = k.reshape(batch, seq, heads, dim)
++        v_s = v.reshape(batch, seq, heads, dim)
++        candidate, marker = sageattn_qk_int8_pv_fp8_cuda_with_output_amax(
++            q_s, k_s, v_s,
++            tensor_layout="NHD",
++            is_causal=False,
++            qk_quant_gran="per_warp",
++            sm_scale=1.0 / math.sqrt(dim),
++            pv_accum_dtype="fp32+fp32",
++            smooth_k=True,
++        )
++        return (
++            candidate.reshape(batch, seq, inner),
++            H3AttentionAmaxMarker(marker, self),
++        )
++
++
++class H3SageAttentionQFusion:
++    __slots__ = ("owner",)
++
++    def __init__(self, owner):
++        self.owner = owner
++
++    @staticmethod
++    def _sage_capability():
++        try:
++            from sageattention import (
++                sageattn_h3_prequantized_q_available,
++                sageattn_h3_prequantized_q_pv_fp8_cuda,
++            )
++            if not sageattn_h3_prequantized_q_available(return_output_amax=True):
++                return None
++        except (ImportError, OSError, RuntimeError):
++            return None
++        return sageattn_h3_prequantized_q_pv_fp8_cuda
++
++    def can_call(
++        self, q, k, v, rope_freqs, q_weight, k_weight, epsilon, heads,
++        mask=None, scale=None,
++    ):
++        return bool(
++            self.owner.mode == "quality"
++            and (not self.owner.calibrate_first_call or self.owner.calibrated)
++            and mask is None
++            and scale is None
++            and heads == 56
++            and isinstance(v, torch.Tensor)
++            and v.shape == q.shape
++            and v.dtype == torch.bfloat16
++            and v.device == q.device
++            and not v.requires_grad
++            and not torch.is_grad_enabled()
++            and q_rms_rope_int8.eligible(
++                q, k, rope_freqs, q_weight, k_weight, epsilon
++            )
++            and self._sage_capability() is not None
++        )
++
++    def __call__(
++        self, q, k, v, rope_freqs, q_weight, k_weight, epsilon, heads,
++        mask=None, scale=None,
++    ):
++        if not self.can_call(
++            q, k, v, rope_freqs, q_weight, k_weight, epsilon, heads,
++            mask=mask, scale=scale,
++        ):
++            raise RuntimeError("H3 Q fusion was invoked without a valid preflight")
++        attention = self._sage_capability()
++        prequantized = q_rms_rope_int8.try_qk_rms_rope_q_int8(
++            q, k, rope_freqs, q_weight, k_weight, epsilon, 16
++        )
++        if prequantized is None:
++            raise RuntimeError("H3 Q fusion lost native capability before launch")
++        q_int8, q_scale, transformed_k = prequantized
++        out, marker = attention(
++            q_int8, q_scale, transformed_k, v, return_output_amax=True
++        )
++        if not (
++            isinstance(out, torch.Tensor)
++            and out.shape == v.shape
++            and out.dtype == torch.bfloat16
++            and out.device == v.device
++            and out.is_contiguous()
++        ):
++            raise RuntimeError("H3 prequantized attention returned an invalid output")
++        out = out.reshape(out.shape[0], out.shape[1], heads * out.shape[-1])
++        return out, H3AttentionAmaxMarker(marker, self)
++
++
+ class H3SageAttentionModel:
+     @classmethod
+     def INPUT_TYPES(cls):
+@@ -170,6 +292,9 @@ class H3SageAttentionModel:
+                 "rms_adaln_nvfp4_fusion": (
+                     ["auto", "stock"], {"default": "auto"}
+                 ),
++                "q_rms_rope_int8_fusion": (
++                    ["auto", "stock"], {"default": "auto"}
++                ),
+             },
+         }
+ 
+@@ -185,6 +310,7 @@ class H3SageAttentionModel:
+         modulation_fusion="exact",
+         swiglu_nvfp4_fusion="auto",
+         rms_adaln_nvfp4_fusion="auto",
++        q_rms_rope_int8_fusion="auto",
+     ):
+         if mode not in ("quality", "fast", "stock"):
+             raise ValueError(f"unsupported H3 attention mode: {mode}")
+@@ -200,12 +326,36 @@ class H3SageAttentionModel:
+             raise ValueError(
+                 f"unsupported H3 RMS+AdaLN NVFP4 fusion: {rms_adaln_nvfp4_fusion}"
+             )
++        if q_rms_rope_int8_fusion not in ("auto", "stock"):
++            raise ValueError(
++                f"unsupported H3 Q RMS-RoPE fusion: {q_rms_rope_int8_fusion}"
++            )
+         patched = model.clone()
+         transformer_options = patched.model_options["transformer_options"]
+         if mode != "stock":
+-            transformer_options["optimized_attention_override"] = H3SageAttentionOverride(
++            override = H3SageAttentionOverride(
+                 mode, calibrate_first_call
+             )
++            transformer_options["optimized_attention_override"] = override
++            if mode == "quality":
++                transformer_options["minimax_h3_attention_output_amax"] = H3SageAttentionOutputAmax(override)
++                if q_rms_rope_int8_fusion == "auto":
++                    transformer_options["minimax_h3_q_rms_rope_int8"] = H3SageAttentionQFusion(override)
++                else:
++                    transformer_options.pop("minimax_h3_q_rms_rope_int8", None)
++            else:
++                transformer_options.pop("minimax_h3_attention_output_amax", None)
++                transformer_options.pop("minimax_h3_q_rms_rope_int8", None)
++        else:
++            producer = transformer_options.get("minimax_h3_attention_output_amax", None)
++            q_fusion = transformer_options.get("minimax_h3_q_rms_rope_int8", None)
++            override = transformer_options.get("optimized_attention_override", None)
++            if isinstance(producer, H3SageAttentionOutputAmax):
++                transformer_options.pop("minimax_h3_attention_output_amax", None)
++            if isinstance(q_fusion, H3SageAttentionQFusion):
++                transformer_options.pop("minimax_h3_q_rms_rope_int8", None)
++            if isinstance(override, H3SageAttentionOverride):
++                transformer_options.pop("optimized_attention_override", None)
+         transformer_options["minimax_h3_modulation_fusion"] = modulation_fusion
+         transformer_options["minimax_h3_swiglu_nvfp4_fusion"] = swiglu_nvfp4_fusion
+         transformer_options["minimax_h3_rms_adaln_nvfp4_fusion"] = rms_adaln_nvfp4_fusion

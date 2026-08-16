@@ -1,0 +1,24 @@
+{
+  "byte_exact": true,
+  "corpus": "random",
+  "dtype": "torch.bfloat16",
+  "eps": 1e-05,
+  "estimated_bf16_traffic_saved_bytes": 439176192,
+  "fused_rms_adaln_nvfp4_ms": 2.3393280506134033,
+  "global_scale_byte_mismatches": 0,
+  "global_scale_exact": true,
+  "materialized_bf16_mismatches": 0,
+  "modulation_dtype": "torch.float32",
+  "modulation_stride": [
+    32256,
+    1
+  ],
+  "packed_byte_mismatches": 0,
+  "rows": 20423,
+  "rstd_exact": true,
+  "rstd_mismatches": 0,
+  "scale_byte_mismatches": 0,
+  "speedup": 1.8090118145879275,
+  "staged_rms_adaln_nvfp4_ms": 4.231872081756592,
+  "width": 5376
+}

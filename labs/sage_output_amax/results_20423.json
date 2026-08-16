@@ -1,0 +1,47 @@
+{
+  "schema": "h3.sage-output-amax-benchmark.v1",
+  "status": "staged-not-live",
+  "date": "2026-08-12",
+  "hardware": "NVIDIA DGX Spark GB10",
+  "shape": {
+    "sequence": 20423,
+    "hidden": 7168,
+    "attention": [1, 20423, 56, 128],
+    "denoising_steps": 20,
+    "dit_blocks": 50
+  },
+  "producer": {
+    "stock_attention_median_ms": 66.72064208984375,
+    "fused_amax_attention_median_ms": 66.62493133544922,
+    "fused_samples_ms": [
+      67.16242980957031,
+      66.75686645507812,
+      66.57718658447266,
+      66.57730865478516,
+      66.63507080078125,
+      66.58502197265625,
+      66.62493133544922,
+      66.84233856201172,
+      66.58857727050781
+    ],
+    "output_amax_bits": 15771,
+    "producer_amax_bits": 15771,
+    "output_amax_exact": true
+  },
+  "consumer": {
+    "dynamic_median_ms": 2.8883519172668457,
+    "from_amax_bits_median_ms": 1.5720640420913696,
+    "saved_ms_per_call": 1.316287875175476,
+    "projected_saved_s_20_steps_50_blocks": 1.316287875175476,
+    "packed_equal": true,
+    "scales_equal": true,
+    "global_equal": true,
+    "test_amax_bits": 16774,
+    "test_global_scale": 0.0062255859375
+  },
+  "production_reference": {
+    "staged_adaln_executor_seconds": 186.66,
+    "staged_adaln_seconds_per_step": 8.01,
+    "note": "Reference only; output-amax prototype was not installed in this run."
+  }
+}

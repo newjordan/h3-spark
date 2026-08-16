@@ -1,0 +1,22 @@
+{
+  "acc0_plus_acc1_regs": 65536,
+  "acc0_regs": 32768,
+  "acc1_bytes": 131072,
+  "acc1_exceeds_optin": true,
+  "cluster_cannot_pair_n_halves": true,
+  "cluster_launch": 1,
+  "device": "NVIDIA GB10",
+  "dual_acc_fills_regfile": true,
+  "identity": "A second 256x64 FP32 acc has no home on GB10: smem opt-in 99 KiB < 128 KiB acc1; 256 threads x 256 floats fills the 64K register file; MaxBlocksPerCluster is 1 so A cannot be multicast to a partner CTA; tcgen05 TMEM is SM_100a/101a, not sm_121a.",
+  "k2_smem_bytes": 86040,
+  "max_blocks_per_cluster": 1,
+  "nvcc_cmd": "/usr/local/cuda/bin/nvcc -c -arch=sm_121a -o /tmp/probe_tmem_sm121.o $HOME/H3_spark/labs/swiglu_nvfp4/native_cuda/probe_tmem_sm121.cu",
+  "nvcc_log_tail": "ptxas /tmp/tmpxft_0003ba20_00000000-7_probe_tmem_sm121.compute_121.ptx, line 24; error   : Instruction 'tcgen05.alloc' not supported on .target 'sm_121'\nptxas /tmp/tmpxft_0003ba20_00000000-7_probe_tmem_sm121.compute_121.ptx, line 24; error   : Feature '.cta_group::1' not supported on .target 'sm_121'\nptxas fatal   : Ptx assembly aborted due to errors",
+  "nvcc_returncode": 255,
+  "pass": true,
+  "regs_per_sm": 65536,
+  "sm": "12.1",
+  "sm_count": 48,
+  "smem_optin": 101376,
+  "tmem_accepted": false
+}

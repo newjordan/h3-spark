@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "Software-pipelined B fragments on 128x128x256 == linear clone == kitchen. Next N-subtile B/SFB overlaps m16n8k64. Same atom and tile; ILP only.",
+  "k": 5376,
+  "kitchen_gemm_min_ms": 20.2951,
+  "linear_full_min_ms": 67.6802,
+  "n": 28672,
+  "pass": true,
+  "pipe_full_min_ms": 67.5507,
+  "pipe_vs_kitchen_mismatches": 0,
+  "pipe_vs_linear_mismatches": 0,
+  "rows": 20423,
+  "vs_kitchen_ms": -47.2556,
+  "vs_linear_ms": 0.1295
+}

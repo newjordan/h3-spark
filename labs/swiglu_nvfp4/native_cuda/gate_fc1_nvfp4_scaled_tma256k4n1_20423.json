@@ -1,0 +1,17 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "K=256 2-stage TMA on 256x64 single-N == four K=64 MMA == kitchen == paired k2. Paired 2-stage is 112 KiB; single-N is 94 KiB under the 99 KiB cap.",
+  "k": 5376,
+  "k2_full_min_ms": 40.1932,
+  "kitchen_gemm_min_ms": 20.1874,
+  "n": 28672,
+  "n1_full_min_ms": 48.913,
+  "n1_vs_k2_mismatches": 0,
+  "n1_vs_kitchen_mismatches": 0,
+  "pass": true,
+  "rows": 20423,
+  "smem_bytes": 94336,
+  "vs_k2_ms": -8.7198,
+  "vs_kitchen_ms": -28.7256
+}

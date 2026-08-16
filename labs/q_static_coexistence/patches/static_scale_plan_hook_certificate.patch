@@ -1,0 +1,66 @@
+--- a/h3_nvfp4_static_scales.py
++++ b/h3_nvfp4_static_scales.py
+@@ -42,6 +42,7 @@
+ FUSION_ALLOWED_SHAPES_ATTR = "_h3_nvfp4_allowed_shapes"
+ FUSION_ALLOWED_DTYPES_ATTR = "_h3_nvfp4_allowed_dtypes"
+ FUSION_VALIDATED_SCALE_ATTR = "_h3_nvfp4_validated_input_scale"
++FUSION_PLAN_HOOK_IDS_ATTR = "_h3_nvfp4_plan_hook_ids"
+ 
+ _LAYER_IDENTITY_FIELDS = (
+     "name",
+@@ -1484,8 +1485,8 @@
+         """Set scales only for the enclosed sampling call and restore exactly.
+ 
+         ``enable_fusion_bridge`` additionally scopes plain companion attributes
+-        consumed by the guarded fused-SwiGLU path. They describe the exact
+-        activated Linear inputs covered by this artifact. Validation deliberately
++        consumed by guarded fused paths. They describe the exact activated
++        Linear inputs and certify the plan-owned shape-guard hook IDs. Validation
+         leaves the bridge disabled so normal Linear pre-hooks observe every call.
+         """
+         if not isinstance(enable_fusion_bridge, bool):
+@@ -1549,6 +1550,9 @@
+                             FUSION_VALIDATED_SCALE_ATTR: _snapshot_plain_attribute(
+                                 module, FUSION_VALIDATED_SCALE_ATTR
+                             ),
++                            FUSION_PLAN_HOOK_IDS_ATTR: _snapshot_plain_attribute(
++                                module, FUSION_PLAN_HOOK_IDS_ATTR
++                            ),
+                         }
+                         # A fused helper bypasses Module.__call__, so any hook
+                         # already present here would otherwise disappear. Ensure
+@@ -1582,17 +1586,25 @@
+                                 FUSION_VALIDATED_SCALE_ATTR,
+                                 assigned_scale,
+                             )
+-                    handles.append(
+-                        module.register_forward_pre_hook(
+-                            lambda mod, args, layer_name=name: guard_pre(layer_name, mod, args)
+-                        )
++                    pre_handle = module.register_forward_pre_hook(
++                        lambda mod, args, layer_name=name: guard_pre(layer_name, mod, args)
+                     )
+-                    handles.append(
+-                        module.register_forward_hook(
+-                            lambda mod, args, output, layer_name=name: guard_post(layer_name, mod, args, output),
+-                            always_call=True,
+-                        )
++                    handles.append(pre_handle)
++                    post_handle = module.register_forward_hook(
++                        lambda mod, args, output, layer_name=name: guard_post(layer_name, mod, args, output),
++                        always_call=True,
+                     )
++                    handles.append(post_handle)
++                    if (
++                        enable_fusion_bridge
++                        and name in companion_snapshots
++                        and getattr(module, FUSION_ENABLED_ATTR, None) is True
++                    ):
++                        _assign_plain_attribute(
++                            module,
++                            FUSION_PLAN_HOOK_IDS_ATTR,
++                            (pre_handle.id, post_handle.id),
++                        )
+                 yield self.report
+             finally:
+                 for handle in handles:

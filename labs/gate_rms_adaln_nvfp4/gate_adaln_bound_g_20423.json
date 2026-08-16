@@ -1,0 +1,18 @@
+{
+  "bound_is_live_g": false,
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "g_global": 0.004547119140625,
+  "g_global_eq_live": false,
+  "g_global_vs_live_ulps": 6815744,
+  "g_row": 0.004241943359375,
+  "g_row_eq_live": false,
+  "g_row_vs_live_ulps": 6160384,
+  "identity": "cheap AdaLN U (residual/table maxima) G(U)==G(T) live first-pass; per-row residual amax + per-mod table max too",
+  "live_g": 0.0026397705078125,
+  "pass": true,
+  "rows": 20423,
+  "u_global": 12.198871612548828,
+  "u_row": 11.443446159362793,
+  "width": 5376
+}

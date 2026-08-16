@@ -1,0 +1,140 @@
+{
+  "device": "NVIDIA GB10",
+  "capability": [
+    12,
+    1
+  ],
+  "torch": "2.13.0+cu130",
+  "rows": [
+    {
+      "rows": 20393,
+      "raw_shape": [
+        20393,
+        28672
+      ],
+      "activated_shape": [
+        20393,
+        14336
+      ],
+      "scale": 0.00864257849752903,
+      "correctness": {
+        "qdata_equal": false,
+        "block_scale_equal": true,
+        "qdata_byte_match_fraction": 0.9999998211860657,
+        "block_scale_byte_match_fraction": 1.0,
+        "dequant_fused_vs_reference": {
+          "mean_abs": 0.0,
+          "max_abs": 0.0,
+          "rel_l2": 0.0
+        },
+        "reference_dequant_vs_bf16_activation": {
+          "mean_abs": 0.03778323158621788,
+          "max_abs": 1.5,
+          "rel_l2": 0.09027882665395737
+        },
+        "fused_dequant_vs_bf16_activation": {
+          "mean_abs": 0.03778323158621788,
+          "max_abs": 1.5,
+          "rel_l2": 0.09027882665395737
+        }
+      },
+      "timing_ms": {
+        "eager_swiglu_plus_cuda_nvfp4": [
+          33.82720184326172,
+          33.66147232055664,
+          33.20732879638672,
+          33.34988784790039,
+          33.75747299194336,
+          33.541343688964844,
+          33.39072036743164,
+          33.46886444091797,
+          36.753761291503906,
+          33.84454345703125
+        ],
+        "fused": [
+          13.68291187286377,
+          11.117119789123535,
+          11.120863914489746,
+          13.520256042480469,
+          14.106656074523926,
+          14.051072120666504,
+          13.535807609558105,
+          13.71679973602295,
+          13.833024024963379,
+          13.909248352050781
+        ],
+        "eager_median": 33.60140800476074,
+        "fused_median": 13.69985580444336,
+        "saved_per_layer": 19.901552200317383,
+        "speedup": 2.4526833336349854,
+        "estimated_saved_50_layers_per_step": 995.0776100158691,
+        "estimated_saved_20_steps_seconds": 19.901552200317383
+      }
+    },
+    {
+      "rows": 16775,
+      "raw_shape": [
+        16775,
+        28672
+      ],
+      "activated_shape": [
+        16775,
+        14336
+      ],
+      "scale": 0.00736084021627903,
+      "correctness": {
+        "qdata_equal": false,
+        "block_scale_equal": true,
+        "qdata_byte_match_fraction": 0.9999998211860657,
+        "block_scale_byte_match_fraction": 1.0,
+        "dequant_fused_vs_reference": {
+          "mean_abs": 0.0,
+          "max_abs": 0.0,
+          "rel_l2": 0.0
+        },
+        "reference_dequant_vs_bf16_activation": {
+          "mean_abs": 0.03777826204895973,
+          "max_abs": 1.375,
+          "rel_l2": 0.09027313441038132
+        },
+        "fused_dequant_vs_bf16_activation": {
+          "mean_abs": 0.03777826204895973,
+          "max_abs": 1.375,
+          "rel_l2": 0.09027313441038132
+        }
+      },
+      "timing_ms": {
+        "eager_swiglu_plus_cuda_nvfp4": [
+          28.482624053955078,
+          27.717695236206055,
+          28.381759643554688,
+          27.827295303344727,
+          28.530879974365234,
+          28.212736129760742,
+          28.658079147338867,
+          27.974336624145508,
+          27.661407470703125,
+          28.107328414916992
+        ],
+        "fused": [
+          10.678848266601562,
+          10.679327964782715,
+          10.453375816345215,
+          10.710047721862793,
+          10.714816093444824,
+          10.674847602844238,
+          10.65385627746582,
+          10.512703895568848,
+          10.630240440368652,
+          10.922112464904785
+        ],
+        "eager_median": 28.160032272338867,
+        "fused_median": 10.6768479347229,
+        "saved_per_layer": 17.483184337615967,
+        "speedup": 2.637485561703817,
+        "estimated_saved_50_layers_per_step": 874.1592168807983,
+        "estimated_saved_20_steps_seconds": 17.483184337615967
+      }
+    }
+  ]
+}

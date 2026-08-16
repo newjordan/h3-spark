@@ -1,0 +1,22 @@
+{
+  "amax_in_epilogue_ms": 0.7327,
+  "device": "NVIDIA GB10",
+  "epi_vs_k2_mismatches": 0,
+  "epi_vs_kitchen_mismatches": 0,
+  "g_epi": 0.0162353515625,
+  "g_epi_vs_twopass_exact": true,
+  "g_two": 0.0162353515625,
+  "identity": "k2 [gate|up] epilogue amax is the same reduction as two-pass on those BF16 products. G_epi == G_two_pass. live_amax rebind == two-pass q/s. No second HBM read.",
+  "k": 5376,
+  "k2_amax_min_ms": 39.8345,
+  "k2_full_min_ms": 39.1018,
+  "kitchen_gemm_min_ms": 20.1787,
+  "n": 28672,
+  "pass": true,
+  "rebind_min_ms": 5.4718,
+  "rebind_vs_twopass_q": 0,
+  "rebind_vs_twopass_s": 0,
+  "rows": 20423,
+  "twopass_min_ms": 10.7886,
+  "vs_kitchen_plus_twopass_ms": -14.339
+}

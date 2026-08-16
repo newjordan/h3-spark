@@ -1,0 +1,41 @@
+{
+  "identity": "Live model.py restored to d7b196cc; accepted static artifact binds. 196 layers applied, 4 dynamic. 20-step FixedRef sampler-only.",
+  "source_sha256": "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff",
+  "artifact_sha256": "b3b4aee71430f2328adc876ded7ee9ddf2138ac76f16ebd07d833fe743d43036",
+  "architecture_sha256": "b580895428c778cca1d5a6f29dec95d84e9d1e46f19ee7e924cb05d05b5258b7",
+  "artifact_prefix": "$HOME/h3/rms_adaln_nvfp4_static_lab/rebind_output/fixed_ref_h3_native_3seed_m130_final_d7b_q_static_gate",
+  "bind_smoke2": {
+    "prompt_id": "eac71fc1-0cd3-43a2-9630-4210879811a7",
+    "result": "success",
+    "executor_seconds": 56.8,
+    "steps": 2
+  },
+  "twenty_step_sampler_only": {
+    "tag": "fixed_ref_static_d7b_restored_20",
+    "prompt_id": "f8878be6-73bd-4add-b331-8264fd9069d1",
+    "result": "success",
+    "wall_seconds": 150.2,
+    "executor_seconds": 147.4,
+    "sampler_seconds_per_step": 7.37,
+    "seed": 26081220,
+    "steps": 20,
+    "frames": 124,
+    "width": 864,
+    "height": 480,
+    "nvfp4_scales": "static",
+    "static_layers_applied": 196,
+    "static_dynamic_fallback_layers": 4,
+    "attention": "sage2-quality",
+    "fusion": "exact",
+    "swiglu": "auto",
+    "rms_adaln": "auto",
+    "q": "auto",
+    "crossblock": "stock"
+  },
+  "accepted_bar": {
+    "sampler_seconds": 147.0,
+    "sampler_seconds_per_step": 7.35
+  },
+  "note": "Restores the accepted static FixedRef path on live serving. Does not beat 7.35. Last live FixedRef with broken fingerprint was dynamic (~180 s executor including VAE). This clock is sampler-only.",
+  "pass": true
+}

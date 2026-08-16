@@ -1,0 +1,29 @@
+{
+  "device": "NVIDIA GB10",
+  "fingerprint_reject_details": {
+    "clone_not_object": "rejected:global_scale is not the live_amax certified for this raw",
+    "foreign_draw": "rejected:global_scale is not the live_amax certified for this raw",
+    "missing_certified": "rejected:live_amax source requires certified_scale",
+    "unknown_source": "rejected:unknown static-rebind source 'plan_v3'; only 'live_amax' is a byte-exact skip",
+    "wrong_certified_object": "rejected:global_scale is not the certified scale object"
+  },
+  "fingerprint_rejects": {
+    "clone_not_object": "rejected",
+    "foreign_draw": "rejected",
+    "missing_certified": "rejected",
+    "unknown_source": "rejected",
+    "wrong_certified_object": "rejected"
+  },
+  "foreign_shapeonly_vs_twopass_q": 11068242,
+  "foreign_shapeonly_vs_twopass_s": 18299007,
+  "g_a": 0.0133056640625,
+  "g_a_equals_g_b": false,
+  "g_b": 0.0155029296875,
+  "identity": "live_amax source binds the two-pass G object to this raw storage. Shape-only rebind accepts a foreign kitchen-FC1 G; that pack is not two-pass. Sourced rebind == two-pass and rejects unknown source / clone / other draw.",
+  "k": 5376,
+  "n": 28672,
+  "pass": true,
+  "rows": 20423,
+  "sourced_vs_twopass_q": 0,
+  "sourced_vs_twopass_s": 0
+}

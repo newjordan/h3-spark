@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GB10",
+  "fused_min_ms": 10.7045,
+  "identity": "8-wide exact SwiGLU amax (every SiLU) + 8-wide pack from amax bits; no bound skip, no store, no 1x1 finalize",
+  "pass": true,
+  "projected_s_per_20_step": 0.2674,
+  "rows": 20423,
+  "saved_ms": 0.2674,
+  "twopass_min_ms": 10.8972,
+  "vec_min_ms": 10.6298,
+  "vec_vs_eager_q": 0,
+  "vec_vs_eager_s": 0,
+  "vec_vs_eager_scale_exact": true,
+  "vec_vs_twopass_q": 0,
+  "vec_vs_twopass_s": 0,
+  "vec_vs_twopass_scale_exact": true,
+  "width": 28672
+}

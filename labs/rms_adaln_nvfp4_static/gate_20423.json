@@ -1,0 +1,21 @@
+{
+  "native_abi": 1,
+  "native_build_id": "h3-rms-adaln-nvfp4-static-register-sm12-v1",
+  "results": [
+    {
+      "activation_traffic_saved_bytes_vs_dynamic_v2": 439257884,
+      "byte_exact": true,
+      "eps": 1e-05,
+      "modulation_dtype": "torch.float32",
+      "nondefault_stream": true,
+      "one_pass_static_ms": 1.6042239665985107,
+      "packed_byte_mismatches": 0,
+      "rows": 20423,
+      "rstd_byte_mismatches": 0,
+      "scale_byte_mismatches": 0,
+      "speedup": 1.963376796045182,
+      "staged_static_ms": 3.149696111679077,
+      "width": 5376
+    }
+  ]
+}

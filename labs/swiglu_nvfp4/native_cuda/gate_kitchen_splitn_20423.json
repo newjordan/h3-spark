@@ -1,0 +1,19 @@
+{
+  "device": "NVIDIA GB10",
+  "eager_split_vs_eager_full": 0,
+  "full_gemm_min_ms": 20.194,
+  "identity": "kitchen NVFP4 MMA is N-independent: mm(X,W)[:, :N] and mm(X,W)[:, N:] equal mm(X,Wg) and mm(X,Wu) on a prefix slice of the same packed codes and swizzled scales (14336 % 128 == 0)",
+  "k": 5376,
+  "n": 14336,
+  "pack_split_vs_twopass_q": 0,
+  "pack_split_vs_twopass_s": 0,
+  "pack_split_vs_twopass_scale_exact": true,
+  "pass": true,
+  "qw_g_vs_prefix": 0,
+  "rows": 20423,
+  "split_gemm_min_ms": 69.3585,
+  "split_vs_full": 0,
+  "sw_g_vs_prefix": 0,
+  "yg_vs_full_left": 0,
+  "yu_vs_full_right": 0
+}

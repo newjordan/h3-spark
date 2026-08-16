@@ -1,0 +1,262 @@
+--- a/tests/test_minimax_h3_rms_adaln_nvfp4_static.py
++++ b/tests/test_minimax_h3_rms_adaln_nvfp4_static.py
+@@ -53,7 +53,7 @@
+     monkeypatch.setattr(adapter, "_tensor_inputs_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "_spark_device_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
+-    monkeypatch.setattr(adapter, "_linear_has_hooks", lambda *_args: False)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+ 
+ 
+ def install_bridge(linear, x, input_scale):
+@@ -62,9 +62,13 @@
+     setattr(linear, BRIDGE_ATTRS[1], frozenset({tuple(x.shape)}))
+     setattr(linear, BRIDGE_ATTRS[2], frozenset({BF16_DTYPE}))
+     setattr(linear, BRIDGE_ATTRS[3], input_scale)
++    setattr(linear, BRIDGE_ATTRS[4], (1, 2))
++    linear._forward_pre_hooks = {1: object()}
++    linear._forward_hooks = {2: object()}
++    linear._forward_hooks_always_called = {2}
+ 
+ 
+-def test_reuses_current_dynamic_v2_guards_and_exact_four_bridge_attrs():
++def test_reuses_current_dynamic_v2_guards_and_exact_five_bridge_attrs():
+     assert adapter._tensor_inputs_eligible is dynamic_v2._tensor_inputs_eligible
+     assert adapter._norm_eligible is dynamic_v2._norm_eligible
+     assert adapter._cast_norm_weight_eligible is dynamic_v2._cast_norm_weight_eligible
+@@ -75,6 +79,7 @@
+         "_h3_nvfp4_allowed_shapes",
+         "_h3_nvfp4_allowed_dtypes",
+         "_h3_nvfp4_validated_input_scale",
++        "_h3_nvfp4_plan_hook_ids",
+     )
+ 
+ 
+@@ -84,7 +89,7 @@
+     )
+     source = path.read_bytes()
+     assert hashlib.sha256(source).hexdigest() == (
+-        "5b62b3beef6b041cf540aa6e6aaf7da6a55c6779a091c7eb5f15dcc778fe32f4"
++        "cecda387857cf65280691d8e85e8498a737d8e2f4e785c04ba500e7b6fb99a23"
+     )
+     text = source.decode("utf-8")
+     assert (
+@@ -385,6 +390,7 @@
+     monkeypatch.setattr(adapter, "_tensor_inputs_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "_spark_device_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     monkeypatch.setattr(
+         adapter,
+         "_static_scale",
+@@ -454,12 +460,27 @@
+ 
+ def static_fixture():
+     norm = SimpleNamespace(eps=adapter.CERTIFIED_H3_RMS_EPS)
+-    linear = SimpleNamespace()
++    linear = SimpleNamespace(
++        in_features=adapter.WIDTH,
++        out_features=21504,
++        bias=None,
++        quant_format="nvfp4",
++        layout_type=adapter.NVFP4_LAYOUT,
++        weight=FakeQuantizedTensor(),
++        pre_quant_scale=None,
++        _full_precision_mm=False,
++        comfy_force_cast_weights=False,
++        weight_function=[],
++        bias_function=[],
++        weight_lowvram_function=None,
++        bias_lowvram_function=None,
++    )
+     x = torch.empty(2, adapter.WIDTH, dtype=torch.bfloat16)
+     mod_scale = torch.empty(1, adapter.WIDTH, dtype=torch.float32)
+     shift = torch.empty_like(mod_scale)
+     rows = torch.zeros(2, dtype=torch.int32)
+     input_scale = torch.tensor(0.25, dtype=torch.float32)
++    install_bridge(linear, x, input_scale)
+     norm_weight = torch.ones(adapter.WIDTH, dtype=torch.bfloat16)
+     linear_weight = FakeQuantizedTensor()
+     qdata = torch.zeros(16, adapter.WIDTH // 2, dtype=torch.uint8)
+@@ -485,6 +506,8 @@
+     lifecycle = []
+     casts = []
+     monkeypatch.setattr(adapter, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "TensorCoreNVFP4Layout", FakeLayout)
+     monkeypatch.setattr(adapter, "_cast_norm_weight_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "run_every_op", lambda: lifecycle.append("run"))
+@@ -553,8 +576,136 @@
+     ]
+ 
+ 
++def test_run_every_op_norm_invalidation_stops_before_cast_or_native(monkeypatch):
++    case = static_fixture()
++    state = {"norm_ok": True}
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: state["norm_ok"])
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
++    monkeypatch.setattr(
++        adapter,
++        "_load_native",
++        lambda: SimpleNamespace(
++            rms_adaln_nvfp4_static=lambda *_args: (_ for _ in ()).throw(
++                AssertionError("native launch")
++            )
++        ),
++    )
++    monkeypatch.setattr(
++        adapter,
++        "run_every_op",
++        lambda: state.__setitem__("norm_ok", False),
++    )
++    monkeypatch.setattr(
++        adapter,
++        "cast_bias_weight",
++        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("cast")),
++    )
++
++    assert adapter._try_static_linear(
++        case.linear,
++        case.norm,
++        case.x,
++        case.mod_scale,
++        case.shift,
++        case.rows,
++        case.input_scale,
++    ) is None
++
++
++def test_norm_cast_callback_invalidation_stops_before_native(monkeypatch):
++    case = static_fixture()
++    state = {"norm_ok": True}
++    uncast = []
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: state["norm_ok"])
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_cast_norm_weight_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "run_every_op", lambda: None)
++    monkeypatch.setattr(
++        adapter,
++        "_load_native",
++        lambda: SimpleNamespace(
++            rms_adaln_nvfp4_static=lambda *_args: (_ for _ in ()).throw(
++                AssertionError("native launch")
++            )
++        ),
++    )
++
++    def cast(module, *_args, **_kwargs):
++        assert module is case.norm
++        state["norm_ok"] = False
++        return case.norm_weight, None, "norm-stream"
++
++    monkeypatch.setattr(adapter, "cast_bias_weight", cast)
++    monkeypatch.setattr(
++        adapter,
++        "uncast_bias_weight",
++        lambda module, *_args: uncast.append(module),
++    )
++
++    assert adapter._try_static_linear(
++        case.linear,
++        case.norm,
++        case.x,
++        case.mod_scale,
++        case.shift,
++        case.rows,
++        case.input_scale,
++    ) is None
++    assert uncast == [case.norm]
++
++
++def test_linear_cast_callback_norm_invalidation_stops_before_gemm(monkeypatch):
++    case = static_fixture()
++    state = {"norm_ok": True}
++    uncast = []
++    monkeypatch.setattr(adapter, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: state["norm_ok"])
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_cast_norm_weight_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "run_every_op", lambda: None)
++    monkeypatch.setattr(
++        adapter,
++        "_load_native",
++        lambda: SimpleNamespace(
++            rms_adaln_nvfp4_static=lambda *_args: (case.qdata, case.block_scale)
++        ),
++    )
++
++    def cast(module, *_args, **_kwargs):
++        if module is case.norm:
++            return case.norm_weight, None, "norm-stream"
++        assert module is case.linear
++        state["norm_ok"] = False
++        return case.linear_weight, None, "linear-stream"
++
++    monkeypatch.setattr(adapter, "cast_bias_weight", cast)
++    monkeypatch.setattr(
++        adapter,
++        "uncast_bias_weight",
++        lambda module, *_args: uncast.append(module),
++    )
++    monkeypatch.setattr(
++        torch.nn.functional,
++        "linear",
++        lambda *_args: (_ for _ in ()).throw(AssertionError("GEMM")),
++    )
++
++    assert adapter._try_static_linear(
++        case.linear,
++        case.norm,
++        case.x,
++        case.mod_scale,
++        case.shift,
++        case.rows,
++        case.input_scale,
++    ) is None
++    assert uncast == [case.norm, case.linear]
++
++
+ def test_norm_cast_mismatch_uncasts_and_never_launches_or_casts_linear(monkeypatch):
+     case = static_fixture()
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     events = []
+     monkeypatch.setattr(
+         adapter,
+@@ -595,6 +746,8 @@
+ 
+ def test_native_exception_uncasts_norm_and_propagates_without_linear_cast(monkeypatch):
+     case = static_fixture()
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     events = []
+     monkeypatch.setattr(
+         adapter,
+@@ -634,6 +787,8 @@
+ 
+ def test_invalid_native_output_uncasts_norm_and_never_casts_linear(monkeypatch):
+     case = static_fixture()
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     events = []
+     monkeypatch.setattr(
+         adapter,
+@@ -675,6 +830,8 @@
+     case = static_fixture()
+     events = []
+     monkeypatch.setattr(adapter, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     monkeypatch.setattr(
+         adapter,
+         "_load_native",
+@@ -712,6 +869,8 @@
+     case = static_fixture()
+     events = []
+     monkeypatch.setattr(adapter, "QuantizedTensor", FakeQuantizedTensor)
++    monkeypatch.setattr(adapter, "_norm_eligible", lambda *_args: True)
++    monkeypatch.setattr(adapter, "_linear_eligible", lambda *_args: True)
+     monkeypatch.setattr(adapter, "TensorCoreNVFP4Layout", FakeLayout)
+     monkeypatch.setattr(
+         adapter,

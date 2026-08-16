@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GB10",
+  "identity": "amax writes eager product over the dead up half; pack is half-width NVFP4 of that product; no SiLU, no new 558 MiB workspace",
+  "pass": true,
+  "prod_min_ms": 11.049,
+  "prod_vs_eager_q": 0,
+  "prod_vs_eager_s": 0,
+  "prod_vs_eager_scale_exact": true,
+  "prod_vs_twopass_q": 0,
+  "prod_vs_twopass_s": 0,
+  "prod_vs_twopass_scale_exact": true,
+  "projected_s_per_20_step": -0.3881,
+  "rows": 20423,
+  "saved_ms": -0.3881,
+  "twopass_min_ms": 10.6609,
+  "vec_min_ms": 10.2323,
+  "width": 28672
+}

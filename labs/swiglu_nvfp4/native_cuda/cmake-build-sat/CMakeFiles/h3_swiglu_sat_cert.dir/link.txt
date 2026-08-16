@@ -1,0 +1,1 @@
+/usr/bin/g++ -fPIC -shared  -o h3_swiglu_sat_cert.so @CMakeFiles/h3_swiglu_sat_cert.dir/objects1.rsp @CMakeFiles/h3_swiglu_sat_cert.dir/linkLibs.rsp -L"/usr/local/cuda/targets/sbsa-linux/lib/stubs" -L"/usr/local/cuda/targets/sbsa-linux/lib"

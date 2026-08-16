@@ -1,0 +1,22 @@
+{
+  "device": "NVIDIA GB10",
+  "fc2_finite": true,
+  "fc2_g1_match": false,
+  "fc2_g1_vs_twopass": 121132192,
+  "fc2_sfix_match": false,
+  "fc2_sfix_vs_twopass": 121975643,
+  "g": 0.00640869140625,
+  "g1_pack_min_ms": 5.6081,
+  "homogeneous_frac": 0.0,
+  "homogeneous_scale_blocks": 0,
+  "identity": "G=1 SwiGLU pack + E4M3 rewrite s_fix=E4M3(decode(s')/G) == two-pass q/s iff E4M3 is homogeneous; FC2 consumer of (q',s',1) and (q',s_fix,G) vs two-pass",
+  "live_scale_blocks": 18299008,
+  "pass": true,
+  "q1_vs_twopass_q": 11348596,
+  "q_s_match": false,
+  "rows": 20423,
+  "s1_vs_twopass_s": 18299008,
+  "sfix_vs_twopass_s": 4556624,
+  "twopass_min_ms": 10.8904,
+  "width": 28672
+}

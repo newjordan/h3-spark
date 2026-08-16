@@ -1,0 +1,68 @@
+{
+  "device": "NVIDIA GB10",
+  "identity": "Serving swiglu_nvfp4_dynamic == lab swiglu_nvfp4_dynamic_vec in packed bytes, E4M3, and G bits at S=20423. Same two-pass algebra; launch difference is exactly the missing finalize_dynamic_scale<<<1,1>>> (G inlined in the vec pack). That 1x1 is a named CBF barrier (50/eval). Not patched. Not promoted.",
+  "launches": {
+    "delta_is_missing_1x1": true,
+    "lab_dynamic_source_has_1x1": true,
+    "lab_vec_source_has_1x1": false,
+    "missing_on_vec": "finalize_dynamic_scale_kernel<<<1,1>>>",
+    "serving_compute": [
+      "(anonymous namespace)::finalize_dynamic_scale_kernel(unsigned int const*, float*)",
+      "(anonymous namespace)::swiglu_amax_bf16_bits_kernel(__nv_bfloat16 const*, unsigned int*, long)",
+      "void (anonymous namespace)::swiglu_nvfp4_kernel<true>(__nv_bfloat16 const*, float const*, unsigned char*, unsigned char*, long, long)"
+    ],
+    "serving_cuda": {
+      "(anonymous namespace)::finalize_dynamic_scale_kernel(unsigned int const*, float*)": 1,
+      "(anonymous namespace)::swiglu_amax_bf16_bits_kernel(__nv_bfloat16 const*, unsigned int*, long)": 1,
+      "void (anonymous namespace)::swiglu_nvfp4_kernel<true>(__nv_bfloat16 const*, float const*, unsigned char*, unsigned char*, long, long)": 1,
+      "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 1,
+      "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul> >(int, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul>)": 1
+    },
+    "serving_profile_has_1x1": true,
+    "serving_source": [
+      "swiglu_amax_bf16_bits_kernel",
+      "finalize_dynamic_scale_kernel<<<1,1>>>",
+      "swiglu_nvfp4_kernel<true>"
+    ],
+    "serving_source_has_1x1": true,
+    "vec_compute": [
+      "(anonymous namespace)::swiglu_amax_vec_kernel(__nv_bfloat16 const*, unsigned int*, long)",
+      "(anonymous namespace)::swiglu_nvfp4_pack_from_amax_bits_kernel(__nv_bfloat16 const*, unsigned int const*, float*, unsigned char*, unsigned char*, long, long)"
+    ],
+    "vec_cuda": {
+      "(anonymous namespace)::swiglu_amax_vec_kernel(__nv_bfloat16 const*, unsigned int*, long)": 1,
+      "(anonymous namespace)::swiglu_nvfp4_pack_from_amax_bits_kernel(__nv_bfloat16 const*, unsigned int const*, float*, unsigned char*, unsigned char*, long, long)": 1,
+      "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<int>, std::array<char*, 1ul> >(int, at::native::FillFunctor<int>, std::array<char*, 1ul>)": 1,
+      "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul> >(int, at::native::FillFunctor<unsigned char>, std::array<char*, 1ul>)": 1
+    },
+    "vec_profile_has_1x1": false,
+    "vec_source": [
+      "swiglu_amax_vec_kernel",
+      "swiglu_nvfp4_pack_from_amax_bits_kernel (G inlined)"
+    ]
+  },
+  "pass": true,
+  "patched_serving": false,
+  "promoted": false,
+  "rows": 20423,
+  "serving_default": "stock",
+  "serving_g": 0.006134033203125,
+  "serving_has_vec_entrypoint": false,
+  "serving_min_ms": 11.0408,
+  "serving_sha256": "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f",
+  "serving_sha256_expected": "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f",
+  "serving_sha256_match": true,
+  "serving_so": "$HOME/comfyui-h3-current/comfy/ldm/minimax/swiglu_nvfp4_native_v1.so",
+  "serving_vs_eager_g_bits": true,
+  "serving_vs_eager_q": 0,
+  "serving_vs_eager_s": 0,
+  "serving_vs_vec_g_bits": true,
+  "serving_vs_vec_q": 0,
+  "serving_vs_vec_s": 0,
+  "vec_g": 0.006134033203125,
+  "vec_min_ms": 10.6645,
+  "vec_vs_eager_g_bits": true,
+  "vec_vs_eager_q": 0,
+  "vec_vs_eager_s": 0,
+  "width": 28672
+}

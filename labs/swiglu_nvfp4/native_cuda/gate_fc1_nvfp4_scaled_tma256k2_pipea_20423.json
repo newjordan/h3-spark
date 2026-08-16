@@ -1,0 +1,16 @@
+{
+  "device": "NVIDIA GB10",
+  "full_finite": true,
+  "identity": "software-pipelined A on k2 (256x64 K=128): next K=64 A/SFA overlaps m16n8k64 == kitchen == scalar k2.",
+  "k": 5376,
+  "k2_full_min_ms": 39.3463,
+  "kitchen_gemm_min_ms": 20.2426,
+  "n": 28672,
+  "pass": true,
+  "pipea_full_min_ms": 39.3357,
+  "pipea_vs_k2_mismatches": 0,
+  "pipea_vs_kitchen_mismatches": 0,
+  "rows": 20423,
+  "vs_k2_ms": 0.0106,
+  "vs_kitchen_ms": -19.0931
+}

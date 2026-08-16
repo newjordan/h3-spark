@@ -1,0 +1,74 @@
+{
+  "identity": "NVFP4 supplied-scale overflow is decode_scale = absmax/6/G > 448 on any 16-wide block (T > G*2688). The static pack already computes that absmax and clamps it. A per-call saturate flag is that exact predicate. Two-pass G is bf16(T/2688) and can round down, so T/(G*2688) > 1 on the stock path itself; that is the association, not a fallback. Validator overflow is T versus a *calibrated* G. Quarantining layers 10/11/22/46 is the wrong object: held-out spikes migrate by seed and are one-step. Not a margin raise. Not promoted.",
+  "device": "NVIDIA GB10",
+  "rows": 20423,
+  "width": 28672,
+  "live_t": 18.25,
+  "live_g": 0.00677490234375,
+  "live_g_is_bf16_t_over_2688": true,
+  "live_ratio": 1.0021450021450022,
+  "predicate": {
+    "live_g": {
+      "flag": 1,
+      "ratio": 1.0021450021450022,
+      "expect_flag": 1,
+      "pack_vs_twopass_q": 0,
+      "pack_vs_stock_q": 0,
+      "pack_vs_stock_s": 0,
+      "note": "two-pass G is not a no-overflow certificate; bf16(T/2688) may round down"
+    },
+    "chef_qkv10_1p005": {
+      "flag": 1,
+      "ratio": 1.0075879468871327,
+      "expect_flag": 1,
+      "chef_heldout_ratio": 1.0054313299119013
+    },
+    "median_safe_0p416": {
+      "flag": 0,
+      "ratio": 0.41689230255351956,
+      "expect_flag": 0
+    },
+    "exact_ratio_1": {
+      "flag": 0,
+      "ratio": 0.9999999738719372,
+      "expect_flag": 0
+    },
+    "margin_1p30_foreign": {
+      "flag": 0,
+      "ratio": 0.7708808360932896,
+      "expect_flag": 0,
+      "pack_vs_twopass_q": 13170218
+    }
+  },
+  "flags_match": true,
+  "live_bytes_exact": true,
+  "exact_ratio_is_one": true,
+  "margin_is_foreign_g": true,
+  "sat_pack_min_ms": 5.8179,
+  "stock_rebind_min_ms": 5.7715,
+  "twopass_min_ms": 11.1367,
+  "exclusion_algebra": {
+    "object_wrong": "per-layer max scale + named quarantine",
+    "object_right": "per-call pre-clamp decode_scale > 448",
+    "m130_after_fc2_quarantine": {
+      "blocks.10.attn.qkv_proj": {
+        "max": 1.0054313299119013,
+        "median": 0.7250220896600895,
+        "overflow_calls": 1,
+        "calls": 20
+      },
+      "blocks.11.attn.qkv_proj": {
+        "max": 1.0033699633699633,
+        "median": 0.41611721611721614,
+        "overflow_calls": 1,
+        "calls": 20
+      }
+    },
+    "two_seed_unexcluded": {
+      "blocks.49.attn.qkv_proj": 1.0721414640767217,
+      "blocks.48.mlp.fc2": 1.0374150130985875
+    },
+    "do_not": "raise every scale; spikes migrate"
+  },
+  "pass": true
+}

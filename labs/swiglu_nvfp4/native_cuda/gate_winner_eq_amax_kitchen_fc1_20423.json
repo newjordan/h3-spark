@@ -1,0 +1,22 @@
+{
+  "G_L": 0.01416015625,
+  "G_T": 0.01416015625,
+  "G_U": 0.01422119140625,
+  "L_abs_bits": 16920,
+  "T_abs_bits": 16920,
+  "T_equals_L": true,
+  "U_abs_bits": 16921,
+  "U_minus_L": 1,
+  "device": "NVIDIA GB10",
+  "identity": "On kitchen FC1 [gate|up], bound-winner exact L equals true amax T iff no product attains the loose bound U. Then pack-from-G(L) == two-pass without G(L)==G(U).",
+  "pass": true,
+  "rows": 20423,
+  "source": "kitchen_fc1_nvfp4_20423x5376x28672",
+  "twopass_min_ms": 10.7953,
+  "winner_exact_is_amax": true,
+  "winner_pack_byte_exact": true,
+  "winner_pack_vs_twopass_q": 0,
+  "winner_pack_vs_twopass_s": 0,
+  "winner_pack_vs_twopass_scale_exact": true,
+  "winner_plus_rebind_min_ms": 10.6638
+}

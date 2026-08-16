@@ -1,0 +1,120 @@
+--- a/test_static_scales.py
++++ b/test_static_scales.py
+@@ -18,6 +17,7 @@
+     FUSION_ALLOWED_DTYPES_ATTR,
+     FUSION_ALLOWED_SHAPES_ATTR,
+     FUSION_ENABLED_ATTR,
++    FUSION_PLAN_HOOK_IDS_ATTR,
+     FUSION_VALIDATED_SCALE_ATTR,
+     StaticScalePlan,
+     StaticScaleValidator,
+@@ -94,6 +94,96 @@
+ 
+ 
+ class StaticScaleTests(unittest.TestCase):
++    def test_fusion_bridge_certifies_only_plan_owned_hooks_and_restores(self):
++        with tempfile.TemporaryDirectory() as value:
++            directory = Path(value)
++            root, calibrator = self.calibrate(directory)
++            prefix = directory / "FixedRef"
++            save_calibration(calibrator, prefix)
++            plan = StaticScalePlan(root, prefix, strict=True, require_h3=False)
++            module = root.blocks[0].attn.qkv_proj
++
++            self.assertFalse(hasattr(module, FUSION_PLAN_HOOK_IDS_ATTR))
++            with plan.activate(enable_fusion_bridge=True):
++                hook_ids = getattr(module, FUSION_PLAN_HOOK_IDS_ATTR)
++                self.assertEqual(set(module._forward_pre_hooks), {hook_ids[0]})
++                self.assertEqual(set(module._forward_hooks), {hook_ids[1]})
++                self.assertFalse(module._forward_pre_hooks_with_kwargs)
++                self.assertFalse(module._forward_hooks_with_kwargs)
++                self.assertEqual(
++                    set(module._forward_hooks_always_called), {hook_ids[1]}
++                )
++                self.assertFalse(module._backward_pre_hooks)
++                self.assertFalse(module._backward_hooks)
++
++                foreign = module.register_forward_hook(
++                    lambda _module, _args, output: output
++                )
++                try:
++                    self.assertNotEqual(
++                        set(module._forward_hooks), {hook_ids[1]}
++                    )
++                finally:
++                    foreign.remove()
++                self.assertEqual(set(module._forward_hooks), {hook_ids[1]})
++
++            self.assertFalse(hasattr(module, "input_scale"))
++            for attribute in (
++                FUSION_ENABLED_ATTR,
++                FUSION_ALLOWED_SHAPES_ATTR,
++                FUSION_ALLOWED_DTYPES_ATTR,
++                FUSION_VALIDATED_SCALE_ATTR,
++                FUSION_PLAN_HOOK_IDS_ATTR,
++            ):
++                self.assertFalse(hasattr(module, attribute))
++            self.assertFalse(module._forward_pre_hooks)
++            self.assertFalse(module._forward_hooks)
++
++    def test_preexisting_hook_suppresses_bridge_and_restores(self):
++        with tempfile.TemporaryDirectory() as value:
++            directory = Path(value)
++            root, calibrator = self.calibrate(directory)
++            prefix = directory / "FixedRef"
++            save_calibration(calibrator, prefix)
++            plan = StaticScalePlan(root, prefix, strict=True, require_h3=False)
++            module = root.blocks[0].attn.qkv_proj
++            foreign = module.register_forward_pre_hook(lambda _module, _args: None)
++            try:
++                with plan.activate(enable_fusion_bridge=True):
++                    self.assertFalse(hasattr(module, FUSION_ENABLED_ATTR))
++                    self.assertFalse(hasattr(module, FUSION_PLAN_HOOK_IDS_ATTR))
++                    self.assertIn(foreign.id, module._forward_pre_hooks)
++                self.assertEqual(set(module._forward_pre_hooks), {foreign.id})
++                self.assertFalse(module._forward_hooks)
++            finally:
++                foreign.remove()
++
++    def test_post_hook_registration_failure_restores_pre_hook_and_bridge(self):
++        with tempfile.TemporaryDirectory() as value:
++            directory = Path(value)
++            root, calibrator = self.calibrate(directory)
++            prefix = directory / "FixedRef"
++            save_calibration(calibrator, prefix)
++            plan = StaticScalePlan(root, prefix, strict=True, require_h3=False)
++            module = root.blocks[0].attn.qkv_proj
++            original = module.register_forward_hook
++
++            def fail(*_args, **_kwargs):
++                raise RuntimeError("registration failure")
++
++            module.register_forward_hook = fail
++            try:
++                with self.assertRaisesRegex(RuntimeError, "registration failure"):
++                    with plan.activate(enable_fusion_bridge=True):
++                        self.fail("scope entered")
++            finally:
++                module.register_forward_hook = original
++
++            self.assertFalse(module._forward_pre_hooks)
++            self.assertFalse(module._forward_hooks)
++            self.assertFalse(hasattr(module, "input_scale"))
++            self.assertFalse(hasattr(module, FUSION_PLAN_HOOK_IDS_ATTR))
++
+     def test_merge_numeric_validation_wraps_huge_integer_overflow(self):
+         with self.assertRaisesRegex(ArtifactError, "positive finite number"):
+             _positive_finite_float(10**10000, "malformed statistic")
+@@ -923,9 +1013,9 @@
+ 
+     @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required for comfy-kitchen NVFP4")
+     def test_real_comfy_nvfp4_exact_static_scale_matches_dynamic_quantization(self):
+-        comfy_root = os.environ.get("H3_COMFYUI_ROOT")
+-        if not comfy_root:
+-            self.skipTest("set H3_COMFYUI_ROOT for the real comfy-kitchen gate")
++        comfy_root = os.environ.get("COMFYUI_ROOT")
++        if not comfy_root:
++            self.skipTest("set COMFYUI_ROOT for the real comfy-kitchen gate")
+         if comfy_root not in sys.path:
+             sys.path.insert(0, comfy_root)
+         try:

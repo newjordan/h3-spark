@@ -1,0 +1,41 @@
+{
+  "artifacts": {
+    "consumer_sha256": "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f",
+    "q_native_sha256": "b97b30c30222276d490d2a3d4cf2fff1081d7ff3a66d8e01395589feccd2da1f",
+    "sage_fused_sha256": "30137fab72eb9571d911202f7e72b0c9a633b5eafd2dbadb758080a281651a12",
+    "sage_qattn_sm89_sha256": "e4861cdd94cdd2bbbe6c96e16663be620c221454048756ddd2e6d5379460d2db"
+  },
+  "default_stream": {
+    "consumer_triplet_exact": true,
+    "generic_vs_output_amax_bf16_exact": true,
+    "k_bf16_exact": true,
+    "marker_exact": true,
+    "marker_finite": true,
+    "marker_matches_output": true,
+    "packed_q_k_version_delta_exact": true,
+    "prequant_output_bf16_exact": true,
+    "q_int8_exact": true,
+    "q_scale_exact": true,
+    "reference_marker_matches_output": true,
+    "version_deltas": [1, 1, 1]
+  },
+  "exit_code": 0,
+  "nondefault_stream": {
+    "consumer_triplet_exact": true,
+    "generic_vs_output_amax_bf16_exact": true,
+    "k_bf16_exact": true,
+    "marker_exact": true,
+    "marker_finite": true,
+    "marker_matches_output": true,
+    "packed_q_k_version_delta_exact": true,
+    "prequant_output_bf16_exact": true,
+    "q_int8_exact": true,
+    "q_scale_exact": true,
+    "reference_marker_matches_output": true,
+    "version_deltas": [1, 1, 1]
+  },
+  "observed_wall_seconds": 2.8,
+  "qualification_status": "pass",
+  "script_sha256": "04c9fea0bfbc57ac0bd0aa387676ab4ecabf9bb91a10abb7cc7d5d2abfbdbaf1",
+  "shape": [1, 20423, 56, 128]
+}

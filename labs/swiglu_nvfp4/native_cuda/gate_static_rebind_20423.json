@@ -1,0 +1,25 @@
+{
+  "device": "NVIDIA GB10",
+  "fingerprint_rejects": {
+    "cpu": "rejected",
+    "scale_identity": "rejected",
+    "scale_numel": "rejected",
+    "wrong_width": "rejected"
+  },
+  "identity": "static 8-wide pack-from-supplied-scale skips amax; byte-identical iff G is the live (amax/2688).to(bf16).to(fp32); fingerprint is shape/dtype/device/identity",
+  "legacy4_min_ms": 5.6619,
+  "pass": true,
+  "projected_s_per_20_step": 5.195,
+  "rows": 20423,
+  "saved_ms": 5.195,
+  "static_min_ms": 5.695,
+  "static_vs_4wide_q": 0,
+  "static_vs_4wide_s": 0,
+  "static_vs_eager_q": 0,
+  "static_vs_eager_s": 0,
+  "static_vs_twopass_q": 0,
+  "static_vs_twopass_s": 0,
+  "static_vs_twopass_scale_exact": true,
+  "twopass_min_ms": 10.89,
+  "width": 28672
+}

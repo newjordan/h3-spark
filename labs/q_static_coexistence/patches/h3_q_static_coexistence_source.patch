@@ -1,0 +1,228 @@
+diff --git a/comfy/ldm/minimax/linear_nvfp4.py b/comfy/ldm/minimax/linear_nvfp4.py
+index 4b702f6..c48910e 100644
+--- a/comfy/ldm/minimax/linear_nvfp4.py
++++ b/comfy/ldm/minimax/linear_nvfp4.py
+@@ -13,6 +13,7 @@ from comfy.ldm.minimax.swiglu_nvfp4 import (
+     _cuda_device_supported,
+     _has_global_forward_hooks,
+     _load_native,
++    _plan_hooks_match,
+ )
+ from comfy.ops import cast_bias_weight, run_every_op, uncast_bias_weight
+ from comfy.quant_ops import QuantizedTensor, TensorCoreNVFP4Layout
+@@ -72,6 +73,7 @@ def _static_scale(linear, x):
+     shapes = getattr(linear, BRIDGE_ATTRS[1], None)
+     dtypes = getattr(linear, BRIDGE_ATTRS[2], None)
+     validated_scale = getattr(linear, BRIDGE_ATTRS[3], None)
++    hook_ids = getattr(linear, BRIDGE_ATTRS[4], None)
+     scale = getattr(linear, "input_scale", None)
+     if not (
+         getattr(linear, BRIDGE_ATTRS[0], None) is True
+@@ -86,6 +88,7 @@ def _static_scale(linear, x):
+         and scale.device == x.device
+         and not scale.requires_grad
+         and validated_scale is scale
++        and _plan_hooks_match(linear, hook_ids)
+         and not _has_global_forward_hooks()
+     ):
+         return None
+@@ -119,10 +122,14 @@ def try_linear(linear, x, mode):
+         return None
+ 
+     run_every_op()
++    if route == "static" and _static_scale(linear, x) is not scale:
++        return None
+     weight, bias, offload_stream = cast_bias_weight(
+         linear, x, offloadable=True, compute_dtype=x.dtype, want_requant=True
+     )
+     try:
++        if route == "static" and _static_scale(linear, x) is not scale:
++            return None
+         if (
+             not isinstance(weight, QuantizedTensor)
+             or weight._layout_cls != NVFP4_LAYOUT
+@@ -132,6 +139,8 @@ def try_linear(linear, x, mode):
+ 
+         if route == "static":
+             qdata, block_scale = quantize(x, scale)
++            if _static_scale(linear, x) is not scale:
++                return None
+         else:
+             qdata, block_scale, scale = quantize(x)
+         params = TensorCoreNVFP4Layout.Params(
+@@ -192,6 +201,41 @@ def can_linear_from_amax_bits(linear, x, mode):
+     return _supplied_amax_native() is not None
+ 
+ 
++def can_static_linear_for_output(linear, rows, device, dtype, mode):
++    """Preflight a static H3 attention output before its producer launches."""
++    device = torch.device(device)
++    shapes = getattr(linear, BRIDGE_ATTRS[1], None)
++    dtypes = getattr(linear, BRIDGE_ATTRS[2], None)
++    validated_scale = getattr(linear, BRIDGE_ATTRS[3], None)
++    hook_ids = getattr(linear, BRIDGE_ATTRS[4], None)
++    scale = getattr(linear, "input_scale", None)
++    return (
++        mode in ("static", "auto")
++        and not torch.is_grad_enabled()
++        and isinstance(rows, int)
++        and rows > 0
++        and device.type == "cuda"
++        and _cuda_device_supported(device)
++        and dtype == torch.bfloat16
++        and getattr(linear, BRIDGE_ATTRS[0], None) is True
++        and isinstance(shapes, frozenset)
++        and (rows, 7168) in shapes
++        and isinstance(dtypes, frozenset)
++        and BF16_DTYPE in dtypes
++        and isinstance(scale, torch.Tensor)
++        and scale.ndim == 0
++        and scale.dtype == torch.float32
++        and scale.device == device
++        and not scale.requires_grad
++        and validated_scale is scale
++        and _plan_hooks_match(linear, hook_ids)
++        and (getattr(linear, "in_features", None), getattr(linear, "out_features", None))
++        == (7168, 5376)
++        and _linear_config_eligible(linear, 7168)
++        and not _has_global_forward_hooks()
++    )
++
++
+ def can_linear_from_amax_bits_for_output(linear, rows, device, dtype, mode):
+     """Preflight H3's freshly allocated contiguous attention output."""
+     device = torch.device(device)
+@@ -250,6 +294,7 @@ __all__ = [
+     "H3_SUPPLIED_AMAX_BUILD_ID",
+     "can_linear_from_amax_bits",
+     "can_linear_from_amax_bits_for_output",
++    "can_static_linear_for_output",
+     "try_linear",
+     "try_linear_from_amax_bits",
+ ]
+diff --git a/comfy/ldm/minimax/model.py b/comfy/ldm/minimax/model.py
+index 9941c5d..79815f8 100644
+--- a/comfy/ldm/minimax/model.py
++++ b/comfy/ldm/minimax/model.py
+@@ -41,6 +41,7 @@ from comfy.ldm.minimax.gate_rms_adaln_nvfp4 import try_mlp_transition as try_gat
+ from comfy.ldm.minimax.linear_nvfp4 import (
+     can_linear_from_amax_bits,
+     can_linear_from_amax_bits_for_output,
++    can_static_linear_for_output,
+     try_linear as try_nvfp4_linear,
+     try_linear_from_amax_bits as try_nvfp4_linear_from_amax_bits,
+ )
+@@ -196,6 +197,44 @@ class Attention(nn.Module):
+                 "minimax_h3_linear_nvfp4_fusion",
+                 transformer_options.get("minimax_h3_swiglu_nvfp4_fusion", "stock"),
+             )
++            if (
++                callable(getattr(q_fusion, "can_call", None))
++                and callable(q_fusion)
++                and getattr(q_fusion, "owner", None) is override
++                and not comfy.model_management.in_training
++                and not torch.is_grad_enabled()
++                and not any(tensor.requires_grad for tensor in (q, k, v, rope_freqs, qw, kw))
++                and not transformer_options.get("patches", {})
++                and not transformer_options.get("patches_replace", {})
++                and can_static_linear_for_output(
++                    self.out_proj, s, qkv.device, qkv.dtype, mode
++                )
++                and q_fusion.can_call(
++                    q, k, v.unsqueeze(0), rope_freqs, qw, kw,
++                    self.q_norm.eps, self.heads, mask=None, scale=None,
++                )
++            ):
++                out, marker = q_fusion(
++                    q, k, v.unsqueeze(0), rope_freqs, qw, kw,
++                    self.q_norm.eps, self.heads, mask=None, scale=None,
++                )
++                if not (
++                    isinstance(marker, H3AttentionAmaxMarker)
++                    and marker.owner is q_fusion
++                ):
++                    raise RuntimeError("H3 Q fusion returned an invalid provenance marker")
++                if not (
++                    isinstance(out, torch.Tensor)
++                    and out.shape == (1, s, self.out_proj.in_features)
++                    and out.dtype == torch.bfloat16
++                    and out.device == qkv.device
++                    and out.is_contiguous()
++                    and not out.requires_grad
++                ):
++                    raise RuntimeError("H3 Q fusion returned an invalid static projection input")
++                static_options = dict(transformer_options)
++                static_options["minimax_h3_linear_nvfp4_fusion"] = "static"
++                return _h3_linear(self.out_proj, out.squeeze(0), static_options)
+             if (
+                 callable(getattr(q_fusion, "can_call", None))
+                 and callable(q_fusion)
+diff --git a/comfy/ldm/minimax/swiglu_nvfp4.py b/comfy/ldm/minimax/swiglu_nvfp4.py
+index 7cde375..c4618ac 100644
+--- a/comfy/ldm/minimax/swiglu_nvfp4.py
++++ b/comfy/ldm/minimax/swiglu_nvfp4.py
+@@ -24,6 +24,7 @@ BRIDGE_ATTRS = (
+     "_h3_nvfp4_allowed_shapes",
+     "_h3_nvfp4_allowed_dtypes",
+     "_h3_nvfp4_validated_input_scale",
++    "_h3_nvfp4_plan_hook_ids",
+ )
+ HOOK_ATTRS = (
+     "_forward_pre_hooks",
+@@ -108,6 +109,7 @@ def _static_scale(linear, x):
+     shapes = getattr(linear, BRIDGE_ATTRS[1], None)
+     dtypes = getattr(linear, BRIDGE_ATTRS[2], None)
+     validated_scale = getattr(linear, BRIDGE_ATTRS[3], None)
++    hook_ids = getattr(linear, BRIDGE_ATTRS[4], None)
+     scale = getattr(linear, "input_scale", None)
+     if not (
+         getattr(linear, BRIDGE_ATTRS[0], None) is True
+@@ -122,6 +124,7 @@ def _static_scale(linear, x):
+         and scale.device == x.device
+         and not scale.requires_grad
+         and validated_scale is scale
++        and _plan_hooks_match(linear, hook_ids)
+         and not _has_global_forward_hooks()
+     ):
+         return None
+@@ -134,6 +137,22 @@ def _has_global_forward_hooks():
+     return any(bool(getattr(torch_module, name, None)) for name in GLOBAL_FORWARD_HOOK_ATTRS)
+ 
+ 
++def _plan_hooks_match(linear, hook_ids):
++    return (
++        isinstance(hook_ids, tuple)
++        and len(hook_ids) == 2
++        and all(type(value) is int for value in hook_ids)
++        and hook_ids[0] != hook_ids[1]
++        and set(getattr(linear, "_forward_pre_hooks", ())) == {hook_ids[0]}
++        and set(getattr(linear, "_forward_hooks", ())) == {hook_ids[1]}
++        and not bool(getattr(linear, "_forward_pre_hooks_with_kwargs", None))
++        and not bool(getattr(linear, "_forward_hooks_with_kwargs", None))
++        and set(getattr(linear, "_forward_hooks_always_called", ())) == {hook_ids[1]}
++        and not bool(getattr(linear, "_backward_pre_hooks", None))
++        and not bool(getattr(linear, "_backward_hooks", None))
++    )
++
++
+ def _dynamic_eligible(linear):
+     return (
+         getattr(linear, "input_scale", None) is None
+@@ -167,6 +186,8 @@ def try_linear(linear, x, mode):
+         linear, x, offloadable=True, compute_dtype=x.dtype, want_requant=True
+     )
+     try:
++        if route == "static" and _static_scale(linear, x) is not scale:
++            return None
+         if (
+             not isinstance(weight, QuantizedTensor)
+             or weight._layout_cls != NVFP4_LAYOUT
+@@ -176,6 +197,8 @@ def try_linear(linear, x, mode):
+ 
+         if route == "static":
+             qdata, block_scale = native.swiglu_nvfp4(x, scale, True)
++            if _static_scale(linear, x) is not scale:
++                return None
+         else:
+             qdata, block_scale, scale = native.swiglu_nvfp4_dynamic(x)
+         block_scale = block_scale.view(torch.float8_e4m3fn)
