@@ -30,15 +30,6 @@ single NVIDIA DGX Spark, at serving speed. Two parts:
    source, native kernels, qualification receipts, and the validated
    serving environment (`config/h3_spark_serving.env`).
 
-## Demo
-
-Four-shot segment generated and served from one DGX Spark (drone orbit
-on the wizard -> knight riding solo -> riding together -> wide shot with
-a dragon silhouette), with narration voice-over and score mix. Watch it
-in the GitHub README (it embeds the video):
-
-**https://github.com/newjordan/h3-spark**
-
 ## What this config does
 
 - **H3-scoped SageAttention 2++ quality attention** with real-activation
@@ -57,6 +48,7 @@ in the GitHub README (it embeds the video):
   grid caches; identical-reference encode/vision/pack reuse.
 - Optional **static NVFP4 activation scales** with fail-closed promotion
   (see `labs/nvfp4_static/`).
+
 
 ## Demo footage (single DGX Spark)
 
