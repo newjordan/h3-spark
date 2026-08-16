@@ -17,6 +17,12 @@ tags:
 Complete serving package for running MiniMax H3 video generation on a
 single NVIDIA DGX Spark, at serving speed. Two parts:
 
+> **Repository hub:** the canonical source tree, install script, demo
+> footage, and issue tracker live on GitHub:
+> **https://github.com/newjordan/h3-spark** — start there to actually
+> run the system. This HF repo mirrors the same source and hosts the
+> serving configuration alongside the weights.
+
 1. **`weights/`** — pruned + NVFP4-quantized checkpoints (modified
    derivatives of the MiniMax H3 weights; see `weights/MODEL_CARD.md`
    and `weights/LICENSE-MiniMax-H3-Community.txt`).
@@ -43,17 +49,7 @@ single NVIDIA DGX Spark, at serving speed. Two parts:
 - Optional **static NVFP4 activation scales** with fail-closed promotion
   (see `labs/nvfp4_static/`).
 
-
-## Demo footage (single DGX Spark)
-
-<video controls src="assets/knight_dragon_final.mp4" width="100%"></video>
-
-Four shots generated and served from one DGX Spark (drone orbit -> solo ride -> riding together -> dragon wide), narration voice-over + score mix.
-
-![Speed chart](assets/h3_spark_speed_chart.png)
-
 ## Measured on one DGX Spark (dgx-spark-host, GB10, sm120)
-
 
 Warm fixed-reference workload 20-step render — 864×480, 124 frames at 24 fps, six
 references, `S=20,423`, boosting GB10, SM clock recorded in the same
@@ -78,19 +74,27 @@ NVIDIA driver ≥ 580, CUDA 13.0. Target: NVIDIA DGX Spark (sm120) or
 other Blackwell parts (B200 validation in progress).
 
 ```bash
-git clone https://huggingface.co/<owner>/h3-spark-serving-config
-cd h3-spark-serving-config
-# 1. weights: download the companion weights repo into a models directory
-hf download <owner>/h3-spark-weights --local-dir models
+# 1. get the source (canonical clone — GitHub)
+git clone https://github.com/newjordan/h3-spark
+cd h3-spark
+
+# 2. weights: official upstream MiniMax H3 checkpoints
+hf download MiniMaxAI/MiniMax-H3 --local-dir models --include "Ref2VA/*" "FL2VA/*"
 mkdir -p models/ComfyUI/models
-cp -r models/diffusion_models models/ComfyUI/models/
-cp -r models/text_encoders   models/ComfyUI/models/
-cp -r models/vae             models/ComfyUI/models/
-# 2. overlay: install the serving source overlay into ComfyUI
+cp -r models/Ref2VA   models/ComfyUI/models/
+cp -r models/FL2VA    models/ComfyUI/models/
+
+# 3. overlay: install the serving source overlay into ComfyUI
 bash scripts/install_comfyui_overlay.sh /path/to/ComfyUI
-# 3. env: export the validated serving defaults
+
+# 4. env: export the validated serving defaults
 set -a; source config/h3_spark_serving.env; set +a
 ```
+
+> Our pruned + NVFP4-quantized derivatives (the numbers in the table
+> below) ship as a companion weights package — status and download in
+> the GitHub README.
+
 
 Start ComfyUI with:
 
