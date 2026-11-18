@@ -94,8 +94,13 @@ def test_pinned_model_source_owns_exact_qkv_fc1_and_row_token_call_sites():
         / "model.py"
     )
     source = path.read_bytes()
+    # This pins the shipped overlay source: the identity-overlay landing
+    # plus the staged HOLD cross-block wiring. The static v3 artifact
+    # stays bound to the qualified source d7b196cc... recorded in
+    # labs/nvfp4_static/final_rebind_receipt.json and fail-closes
+    # against any other source, so H3_NVFP4_STATIC_ARTIFACT ships empty.
     assert hashlib.sha256(source).hexdigest() == (
-        "d7b196cc8b2ca753fe2a590e0741e6e7979aa52bdd6f5429592ddf1fcb7d77ff"
+        "004c1e2c070054587c4bc37c06613fd0a8ebe19f8c3f962692449c6d7ac2862d"
     )
     text = source.decode("utf-8")
     assert (

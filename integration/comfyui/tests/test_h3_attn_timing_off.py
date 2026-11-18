@@ -3,10 +3,15 @@ from __future__ import annotations
 import importlib.util
 import os
 import unittest
+from pathlib import Path
 
 
 def _load():
-    path = "$HOME/comfyui-h3-current/custom_nodes/h3_sage_attention.py"
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "custom_nodes"
+        / "h3_sage_attention.py"
+    )
     spec = importlib.util.spec_from_file_location("h3_sage_attention_test", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

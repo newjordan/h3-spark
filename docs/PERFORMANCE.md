@@ -105,8 +105,8 @@ One warm DiT evaluation on the live accepted stack (sage2-quality, exact
 modulation, SwiGLU/RMS/Q auto, cross-block **stock**, dynamic NVFP4).
 Sampler-only 3-step, profiler wait=2 / active=1. Measured sequence **20,393**
 rows (not the 20,423-row isolated-gate shape). Compact receipt:
-`benchmarks/profiles/accepted_stack_20260812.json`. Chrome trace stays
-outside Git.
+`benchmarks/profiles/accepted_stack_20260812.json` (campaign worktree;
+not included in this repository). Chrome trace stays outside Git.
 
 | Rank | Kernel / boundary | Self CUDA / eval | Notes |
 |---|---|---:|---|

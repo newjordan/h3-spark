@@ -4,7 +4,7 @@ import unittest
 
 import torch
 
-from comfy.ldm.modules.attention import attention_pytorch
+from comfy.ops import scaled_dot_product_attention
 from comfy.text_encoders.llama import precompute_freqs_cis
 
 
@@ -16,14 +16,19 @@ def _triu_mask(n, dtype, device):
 
 class CausalSdpaTests(unittest.TestCase):
     def test_pytorch_is_causal_matches_triu_mask_cpu(self):
+        # attention_pytorch at the pinned ComfyUI revision does not
+        # forward is_causal (the LM path uses explicit triu masks), so
+        # the bitwise-equivalence gate targets comfy.ops, the wrapper
+        # the shipped overlay actually calls with is_causal=True
+        # (audio VAE).
         torch.manual_seed(0)
         b, h, s, d = 1, 4, 16, 32
         q = torch.randn(b, h, s, d)
         k = torch.randn(b, h, s, d)
         v = torch.randn(b, h, s, d)
         mask = _triu_mask(s, q.dtype, q.device)
-        via_mask = attention_pytorch(q, k, v, h, mask=mask, skip_reshape=True)
-        via_flag = attention_pytorch(q, k, v, h, mask=None, skip_reshape=True, is_causal=True)
+        via_mask = scaled_dot_product_attention(q, k, v, attn_mask=mask)
+        via_flag = scaled_dot_product_attention(q, k, v, is_causal=True)
         self.assertTrue(torch.equal(via_mask, via_flag))
 
     @unittest.skipUnless(torch.cuda.is_available(), "cuda")
@@ -34,8 +39,8 @@ class CausalSdpaTests(unittest.TestCase):
         k = torch.randn(b, h, s, d, device="cuda", dtype=torch.float32)
         v = torch.randn(b, h, s, d, device="cuda", dtype=torch.float32)
         mask = _triu_mask(s, q.dtype, q.device)
-        via_mask = attention_pytorch(q, k, v, h, mask=mask, skip_reshape=True)
-        via_flag = attention_pytorch(q, k, v, h, mask=None, skip_reshape=True, is_causal=True)
+        via_mask = scaled_dot_product_attention(q, k, v, attn_mask=mask)
+        via_flag = scaled_dot_product_attention(q, k, v, is_causal=True)
         self.assertTrue(torch.equal(via_mask, via_flag))
 
     @unittest.skipUnless(torch.cuda.is_available(), "cuda")
@@ -46,12 +51,8 @@ class CausalSdpaTests(unittest.TestCase):
         k = torch.randn(b, hk, s, d, device="cuda", dtype=torch.float32)
         v = torch.randn(b, hk, s, d, device="cuda", dtype=torch.float32)
         mask = _triu_mask(s, q.dtype, q.device)
-        via_mask = attention_pytorch(
-            q, k, v, hq, mask=mask, skip_reshape=True, enable_gqa=True
-        )
-        via_flag = attention_pytorch(
-            q, k, v, hq, mask=None, skip_reshape=True, enable_gqa=True, is_causal=True
-        )
+        via_mask = scaled_dot_product_attention(q, k, v, enable_gqa=True, attn_mask=mask)
+        via_flag = scaled_dot_product_attention(q, k, v, enable_gqa=True, is_causal=True)
         self.assertTrue(torch.equal(via_mask, via_flag))
 
     def test_freqs_cis_deterministic(self):
