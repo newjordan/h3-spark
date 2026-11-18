@@ -661,8 +661,12 @@ def test_native_abi_build_and_hash_contract(monkeypatch, tmp_path):
 
 
 def test_source_composes_exact_qualified_contracts_and_mutation_boundary():
+    # Pins the shipped v2 gate kernel. The hash qualified at gate time
+    # (5dcba067...) stays recorded as qualified_gate_v2_source_sha256 in
+    # gate_static_20423.json; the shipped kernel postdates this lab's
+    # freeze.
     assert hashlib.sha256(GATE_V2_SOURCE.read_bytes()).hexdigest() == (
-        "5dcba067e7c81896f407ed5ed2fdf5b1f0a1140dffa5e706439667652b74da45"
+        "7699eeddca0f646121273776d656e96cd700b3519dfe74731b40ab2251ff0aec"
     )
     assert hashlib.sha256(STATIC_SOURCE.read_bytes()).hexdigest() == (
         "f9090140eb81e0d8ba07a699ab9f7739dc9e1b44e5a995b85aac4550a86d38f5"

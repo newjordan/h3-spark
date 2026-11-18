@@ -23,9 +23,10 @@ single NVIDIA DGX Spark, at serving speed. Two parts:
 > run the system. This HF repo mirrors the same source and hosts the
 > serving configuration alongside the weights.
 
-1. **`weights/`** — pruned + NVFP4-quantized checkpoints (modified
-   derivatives of the MiniMax H3 weights; see `weights/MODEL_CARD.md`
-   and `weights/LICENSE-MiniMax-H3-Community.txt`).
+1. **`weights/`** (HF weights package; not in this Git clone) —
+   pruned + NVFP4-quantized checkpoints (modified derivatives of the
+   MiniMax H3 weights; see `weights/MODEL_CARD.md` and
+   `weights/LICENSE-MiniMax-H3-Community.txt`).
 2. **the serving config at the repository root** — ComfyUI integration
    source, native kernels, qualification receipts, and the validated
    serving environment (`config/h3_spark_serving.env`).
@@ -59,7 +60,7 @@ ride -> riding together -> dragon wide), narration voice-over + score mix.
 
 ![Speed chart](assets/h3_spark_speed_chart.png)
 
-## Measured on one DGX Spark (dgx-spark-host, GB10, sm120)
+## Measured on one DGX Spark (GB10, sm120)
 
 Warm fixed-reference workload 20-step render — 864×480, 124 frames at 24 fps, six
 references, `S=20,423`, boosting GB10, SM clock recorded in the same
@@ -101,9 +102,10 @@ bash scripts/install_comfyui_overlay.sh /path/to/ComfyUI
 set -a; source config/h3_spark_serving.env; set +a
 ```
 
-> Our pruned + NVFP4-quantized derivatives (the numbers in the table
-> below) ship as a companion weights package — status and download in
-> the GitHub README.
+> The flow above uses the official upstream checkpoints and is complete
+> on its own. Our pruned + NVFP4-quantized derivatives (the measured
+> configs in the table above) ship separately as a companion weights
+> package; its model card carries status and download.
 
 
 Start ComfyUI with:
