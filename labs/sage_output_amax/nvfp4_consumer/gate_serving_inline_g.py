@@ -17,11 +17,37 @@ import comfy_kitchen as ck
 
 
 HERE = Path(__file__).resolve().parent
-NEW_SO = HERE / "cmake-build-120" / "h3_swiglu_nvfp4_native_v1.so"
-OLD_SO = Path(
-    "$HOME/comfyui-h3-current/comfy/ldm/minimax/"
-    "swiglu_nvfp4_native_v1.so.bak-pre-vec"
-)
+
+
+def _load_h3_paths():
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
+
+
+def candidate_library() -> Path:
+    override = _load_h3_paths().optional_env_path("H3_SWIGLU_NVFP4_CANDIDATE")
+    path = override or (HERE / "build" / "h3_swiglu_nvfp4_native_v1.so")
+    if not path.is_file():
+        raise SystemExit(
+            "error: candidate SwiGLU library not found at "
+            f"{path}. Build it with scripts/build_native.sh or set "
+            "H3_SWIGLU_NVFP4_CANDIDATE."
+        )
+    return path
+
+
+def reference_library() -> Path:
+    return _load_h3_paths().require_env_path(
+        "H3_SWIGLU_NVFP4_REFERENCE_LIBRARY", kind="file"
+    )
 ROWS = 20423
 WIDTH = 28672
 REPEATS = 3
@@ -88,7 +114,7 @@ def main() -> int:
         import shutil
 
         old_so = Path("/tmp/h3_swiglu_nvfp4_native_v1.so")
-        shutil.copy2(OLD_SO, old_so)
+        shutil.copy2(reference_library(), old_so)
         old = load_so(old_so)
         device = torch.device("cuda")
         torch.manual_seed(26081390)
@@ -101,12 +127,10 @@ def main() -> int:
         )
         return 0
 
-    if not NEW_SO.is_file():
-        raise FileNotFoundError(NEW_SO)
-    if not OLD_SO.is_file():
-        raise FileNotFoundError(OLD_SO)
+    new_so = candidate_library()
+    reference_library()
     dumped = torch.load(dump_old(), map_location="cpu", weights_only=False)
-    new = load_so(NEW_SO)
+    new = load_so(new_so)
     device = torch.device("cuda")
     torch.manual_seed(26081390)
     raw = torch.randn(ROWS, WIDTH, device=device, dtype=torch.bfloat16)

@@ -242,7 +242,6 @@ def _silu_mul_lib():
         here = os.path.dirname(os.path.abspath(__file__))
         for cand in (
             os.path.join(here, "silu_mul_native_v1.so"),
-            "$HOME/h3/vae_swiglu_lab/silu_mul_native_v1.so",
         ):
             if os.path.isfile(cand):
                 path = cand

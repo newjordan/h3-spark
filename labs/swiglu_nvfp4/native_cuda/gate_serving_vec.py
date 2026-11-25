@@ -30,10 +30,25 @@ REPO = HERE.parents[2]
 ROWS = 20423
 WIDTH = 28672
 REPEATS = 3
-SERVING_SO = Path(
-    "$HOME/comfyui-h3-current/comfy/ldm/minimax/"
-    "swiglu_nvfp4_native_v1.so"
-)
+
+
+def _load_h3_paths():
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
+
+
+def serving_library() -> Path:
+    return _load_h3_paths().require_env_path(
+        "H3_SWIGLU_NVFP4_LIBRARY", kind="file"
+    )
 # QUALIFICATION_RECEIPT.json consumer_sha256
 SERVING_SHA256 = (
     "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f"
@@ -162,7 +177,7 @@ def source_launches() -> dict:
 
 
 def role_serving(raw_path: Path, out_path: Path) -> None:
-    native = load_so(SERVING_SO)
+    native = load_so(serving_library())
     if not callable(getattr(native, "swiglu_nvfp4_dynamic", None)):
         raise ImportError("serving .so missing swiglu_nvfp4_dynamic")
     has_vec = callable(getattr(native, "swiglu_nvfp4_dynamic_vec", None))
@@ -260,9 +275,8 @@ def main() -> int:
             raise SystemExit(f"unknown role {role}")
         return 0
 
-    if not SERVING_SO.is_file():
-        raise FileNotFoundError(SERVING_SO)
-    serving_sha = sha256_file(SERVING_SO)
+    serving_so = serving_library()
+    serving_sha = sha256_file(serving_so)
     device = torch.device("cuda")
     torch.manual_seed(26081313)
     raw = torch.randn(ROWS, WIDTH, device=device, dtype=torch.bfloat16)
@@ -306,7 +320,7 @@ def main() -> int:
         "device": torch.cuda.get_device_name(device),
         "rows": ROWS,
         "width": WIDTH,
-        "serving_so": str(SERVING_SO),
+        "serving_so": str(serving_so),
         "serving_sha256": serving_sha,
         "serving_sha256_expected": SERVING_SHA256,
         "serving_sha256_match": serving_sha == SERVING_SHA256,

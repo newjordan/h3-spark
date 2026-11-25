@@ -24,31 +24,41 @@ from comfy.ldm.minimax.first_block_cache import (
 import comfy.patcher_extension
 
 
-# --- in-executor attention timing tap (added 2026-08-13). Default
-# off: after 900 calls the live tap did cuda.synchronize() on every
-# DiT attention and flushed jsonl every 50. Same sage kernel either
-# way. Opt-in: H3_ATTN_TIMING=on
+# Opt-in attention timing. Default off: a live tap used to synchronize on
+# every DiT attention call. Set H3_ATTN_TIMING=on. The log path is
+# H3_ATTN_TIMING_FILE (default: ./h3_attn_timing.jsonl). The synchronize
+# floor is H3_ATTN_SYNC_FLOOR (default 900).
+import importlib.util as _importlib_util
 import json as _json
 import time as _time
-import os as _attn_os
 
-_ATTN_TIMING_FILE = "$HOME/h3/results/in_exec_attn_20260813.jsonl"
+_timing_spec = _importlib_util.spec_from_file_location(
+    "h3_attn_timing",
+    __import__("pathlib").Path(__file__).with_name("h3_attn_timing.py"),
+)
+if _timing_spec is None or _timing_spec.loader is None:
+    raise ImportError("cannot load h3_attn_timing.py")
+_timing = _importlib_util.module_from_spec(_timing_spec)
+_timing_spec.loader.exec_module(_timing)
+
 _ATTN_CALLS = {}
-_ATTN_SYNC_FLOOR = int(_attn_os.environ.get("_ATTN_SYNC_FLOOR", "900"))
-_ATTN_TIMING_OFF = frozenset({"", "0", "off", "false", "no"})
 
 
 def _attn_timing_enabled():
-    raw = _attn_os.environ.get("H3_ATTN_TIMING", "off")
-    return str(raw).strip().lower() not in _ATTN_TIMING_OFF
+    return _timing.timing_enabled()
 
 
 def _attn_sync_floor():
-    try:
-        with open("$HOME/h3/results/_attn_sync_floor.txt") as _f:
-            return int(_f.read().strip())
-    except Exception:
-        return _ATTN_SYNC_FLOOR
+    return _timing.sync_floor()
+
+
+def _append_timing(record):
+    path = _timing.timing_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(_json.dumps(record) + "\n")
+
+
 _ATTN_GPU_EV0 = []
 _ATTN_GPU_EV1 = []
 _ATTN_GPU_META = []
@@ -70,14 +80,12 @@ def _attn_tick(mode, q_shape, layout, wall_ms, note="", gpu_events=None,
             for _ev0, _ev1, _meta in zip(_ATTN_GPU_EV0, _ATTN_GPU_EV1,
                                          _ATTN_GPU_META):
                 _meta["gpu_ms"] = round(_ev0.elapsed_time(_ev1), 3)
-                with open(_ATTN_TIMING_FILE, "a", encoding="utf-8") as _f:
-                    _f.write(_json.dumps(_meta) + "\n")
+                _append_timing(_meta)
             del _ATTN_GPU_EV0[:]
             del _ATTN_GPU_EV1[:]
             del _ATTN_GPU_META[:]
     else:
-        with open(_ATTN_TIMING_FILE, "a", encoding="utf-8") as _f:
-            _f.write(_json.dumps(rec) + "\n")
+        _append_timing(rec)
 
 
 class H3SageAttentionOverride:
@@ -167,64 +175,6 @@ class H3SageAttentionOverride:
         sm_scale = kwargs.get("scale", None)
         if sm_scale is None:
             sm_scale = 1.0 / math.sqrt(dim)
-
-        if self.mode == "sage3_kfold":
-            try:
-                import importlib.util as _ilu
-                import os as _os
-                import sys as _sys
-                _mname = "h3_sage3_kfold_backend"
-                if _mname not in _sys.modules:
-                    _spec = _ilu.spec_from_file_location(
-                        _mname,
-                        _os.path.join(
-                            _os.path.dirname(_os.path.abspath(__file__)),
-                            "h3_sage3_kfold.py",
-                        ),
-                    )
-                    _mod = _ilu.module_from_spec(_spec)
-                    _sys.modules[_mname] = _mod
-                    _spec.loader.exec_module(_mod)
-                sage3_kfold_attention = getattr(
-                    _sys.modules[_mname], "sage3_kfold_attention")
-                _tb0 = _time.perf_counter()
-                if tensor_layout == "HND":
-                    nq = q_s.transpose(1, 2).contiguous()
-                    nk = k_s.transpose(1, 2).contiguous()
-                    nv = v_s.transpose(1, 2).contiguous()
-                else:
-                    nq, nk, nv = q_s, k_s, v_s
-                _ta0 = _time.perf_counter()
-                if _attn_timing_enabled() and _ATTN_CALLS.get(self.mode, 0) >= _attn_sync_floor():
-                    torch.cuda.synchronize()
-                _ge0 = torch.cuda.Event(enable_timing=True)
-                _ge0.record()
-                out = sage3_kfold_attention(nq, nk, nv, sm_scale)
-                _ge1 = torch.cuda.Event(enable_timing=True)
-                _ge1.record()
-                _attn_tick(self.mode, q.shape, tensor_layout,
-                           (_time.perf_counter() - _ta0) * 1e3,
-                           note="attn", gpu_events=(_ge0, _ge1),
-                           contig=(q_s.is_contiguous(),
-                                   k_s.is_contiguous(),
-                                   v_s.is_contiguous()))
-                _attn_tick(self.mode, q.shape, tensor_layout,
-                           (_time.perf_counter() - _tb0) * 1e3,
-                           note="branch",
-                           contig=(q_s.is_contiguous(),
-                                   k_s.is_contiguous(),
-                                   v_s.is_contiguous()))
-                if tensor_layout == "HND":
-                    out = out.transpose(1, 2)
-                if skip_output_reshape:
-                    return out
-                return out.reshape(batch, seq, heads * dim)
-            except Exception as exc:  # pragma: no cover - defensive
-                if not self.fallback_logged:
-                    logging.warning(
-                        "H3 sage3_kfold attention failed (%s); falling "
-                        "back to the production kernel", exc)
-                    self.fallback_logged = True
 
         _tp0 = _time.perf_counter()
         _timing = _attn_timing_enabled()
@@ -416,7 +366,7 @@ class H3SageAttentionModel:
         return {
             "required": {
                 "model": ("MODEL",),
-                "mode": (["quality", "fast", "stock", "sage3_kfold"], {"default": "quality"}),
+                "mode": (["quality", "fast", "stock"], {"default": "quality"}),
                 "calibrate_first_call": ("BOOLEAN", {"default": True}),
             },
             "optional": {
@@ -458,7 +408,12 @@ class H3SageAttentionModel:
         cross_step_cache="off",
         crossblock_gate_qkv_fusion="stock",
     ):
-        if mode not in ("quality", "fast", "stock", "sage3_kfold"):
+        if mode == "sage3_kfold":
+            raise ValueError(
+                "sage3_kfold is not shipped in this source tree; "
+                "use quality, fast, or stock"
+            )
+        if mode not in ("quality", "fast", "stock"):
             raise ValueError(f"unsupported H3 attention mode: {mode}")
         if modulation_fusion not in ("exact", "aggressive", "stock"):
             raise ValueError(

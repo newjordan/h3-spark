@@ -10,14 +10,24 @@ from h3_nvfp4_static_scales import ArtifactError, verify_promotion
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("prefix", help="v3 artifact prefix")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Fail-closed check that an H3 NVFP4 static-scale artifact matches "
+            "its validation report. Exit 0 prints the result JSON. Exit 2 "
+            "prints a JSON reason and means the artifact must stay dynamic."
+        )
+    )
+    parser.add_argument("prefix", help="v3 artifact prefix (no file extension)")
     parser.add_argument(
         "--exclude",
         default="",
         help="comma/newline-separated layers that must remain dynamic",
     )
-    parser.add_argument("--report", default=None, help="override validation report path")
+    parser.add_argument(
+        "--report",
+        default=None,
+        help="validation report path (default: <prefix> validation sidecar)",
+    )
     args = parser.parse_args()
     try:
         result = verify_promotion(

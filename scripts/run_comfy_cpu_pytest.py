@@ -5,7 +5,15 @@ from __future__ import annotations
 
 import sys
 
-import comfy.options
+try:
+    import comfy.options
+except ImportError:
+    print(
+        "error: comfy is not importable. Run this with PYTHONPATH pointing "
+        "at a ComfyUI checkout plus this repository's integration/comfyui.",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
 
 
 def main() -> int:

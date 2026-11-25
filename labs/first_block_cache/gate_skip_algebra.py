@@ -11,7 +11,6 @@ Lab-only. Does not patch serving. Does not flip cache default.
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -20,10 +19,21 @@ import torch
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-COMFY = Path(os.environ.get("COMFYUI_ROOT", "$HOME/comfyui-h3-current"))
-CACHE_SRC = COMFY / "comfy/ldm/minimax/first_block_cache.py"
 SERVING_ENV = REPO / "config" / "h3_spark_serving.env"
-LIVE_NODE = COMFY / "custom_nodes/h3_sage_attention.py"
+
+
+def _load_h3_paths():
+    import importlib.util
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
 
 SEED = 26081343
 EPS = 1e-5
@@ -69,16 +79,18 @@ def segments_from_rows(row_ids: torch.Tensor) -> list[tuple[int, int, int]]:
     return out
 
 
-def serving_cache_default() -> tuple[str, str]:
+def serving_cache_default() -> tuple[str, str, Path]:
+    comfy = _load_h3_paths().require_env_path("COMFYUI_ROOT", kind="dir")
     env_mode = "missing"
     for line in SERVING_ENV.read_text().splitlines():
         if line.startswith("H3_CROSS_STEP_CACHE="):
             env_mode = line.split("=", 1)[1].strip()
-    node_text = LIVE_NODE.read_text()
+    node_text = (comfy / "custom_nodes/h3_sage_attention.py").read_text()
     node_default = "missing"
     if '"default": "off"' in node_text and "cross_step_cache" in node_text:
         node_default = "off"
-    return env_mode, node_default
+    cache_source = comfy / "comfy/ldm/minimax/first_block_cache.py"
+    return env_mode, node_default, cache_source
 
 
 def build_stack(hidden, heads, head_dim, ffn, t_dim, device, dtype, n_blocks):
@@ -334,15 +346,16 @@ def run_geometry(label, rows, hidden, heads, head_dim, ffn, t_dim, n_mod, device
 
 def main() -> int:
     torch.set_grad_enabled(False)
-    if str(COMFY) not in sys.path:
-        sys.path.insert(0, str(COMFY))
+    comfy = _load_h3_paths().require_env_path("COMFYUI_ROOT", kind="dir")
+    if str(comfy) not in sys.path:
+        sys.path.insert(0, str(comfy))
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA required")
     device = torch.device("cuda")
     torch.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
 
-    env_mode, node_default = serving_cache_default()
+    env_mode, node_default, cache_source = serving_cache_default()
     geometries = [
         run_geometry("small_s129", 129, 64, 4, 16, 128, 64, 21, device),
         run_geometry("small_s20423", 20423, 64, 4, 16, 128, 64, 21, device),
@@ -383,7 +396,7 @@ def main() -> int:
         "device": torch.cuda.get_device_name(0),
         "seed": SEED,
         "dtype": "bfloat16",
-        "cache_source": str(CACHE_SRC),
+        "cache_source": str(cache_source),
         "serving_default": {
             "H3_CROSS_STEP_CACHE": env_mode,
             "node_cross_step_cache": node_default,

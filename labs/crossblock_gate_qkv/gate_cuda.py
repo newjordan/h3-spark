@@ -11,7 +11,6 @@ import argparse
 import hashlib
 import importlib.util
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -22,6 +21,21 @@ import torch.nn.functional as F
 
 
 HERE = Path(__file__).resolve().parent
+
+
+def _load_h3_paths():
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
+
+
 WIDTH = 5376
 QKV_OUT = 21504
 EPS = 1e-5
@@ -289,10 +303,21 @@ def main() -> int:
     parser.add_argument(
         "--comfy-root",
         type=Path,
-        default=os.environ.get("COMFYUI_ROOT", "$HOME/comfyui-h3-current"),
+        default=None,
+        help="ComfyUI checkout. Defaults to COMFYUI_ROOT.",
     )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    if args.comfy_root is None:
+        args.comfy_root = _load_h3_paths().require_env_path(
+            "COMFYUI_ROOT", kind="dir"
+        )
+    else:
+        args.comfy_root = args.comfy_root.expanduser()
+        if not args.comfy_root.is_dir():
+            raise SystemExit(
+                f"error: --comfy-root is not a directory: {args.comfy_root}"
+            )
     if args.rows <= 0:
         parser.error("rows must be positive")
 

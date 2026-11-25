@@ -17,19 +17,38 @@ import sys
 import torch
 
 
+def _required_env(name: str) -> Path:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        raise SystemExit(
+            f"error: {name} is required. "
+            "This script does not fall back to a machine-local path."
+        )
+    return Path(raw).expanduser()
+
+
+def _one_glob(directory: Path, pattern: str) -> Path:
+    matches = sorted(directory.glob(pattern))
+    if len(matches) != 1:
+        raise SystemExit(
+            f"error: expected one {pattern} under {directory}, found {len(matches)}"
+        )
+    return matches[0]
+
+
 Q_ROOT = Path(__file__).resolve().parent
-COMFY = Path(os.environ["COMFYUI_ROOT"])
-SAGE_ROOT = Path(os.environ["H3_SAGE_ROOT"])
-CONSUMER_ROOT = Path(os.environ["H3_NVFP4_CONSUMER_ROOT"])
-Q_BINARY = Path(
-    os.environ.get(
-        "H3_Q_RMS_ROPE_INT8_LIBRARY",
-        Q_ROOT / "build-release" / "h3_q_rms_rope_int8_native_v1.so",
-    )
+COMFY = _required_env("COMFYUI_ROOT")
+SAGE_ROOT = _required_env("H3_SAGE_ROOT")
+CONSUMER_ROOT = _required_env("H3_NVFP4_CONSUMER_ROOT")
+_q_override = os.environ.get("H3_Q_RMS_ROPE_INT8_LIBRARY", "").strip()
+Q_BINARY = (
+    Path(_q_override).expanduser()
+    if _q_override
+    else Q_ROOT / "build" / "h3_q_rms_rope_int8_native_v1.so"
 )
-CONSUMER_BINARY = Path(os.environ["H3_SWIGLU_NVFP4_LIBRARY"])
-SAGE_FUSED = next((SAGE_ROOT / "sageattention").glob("_fused*.so"))
-SAGE_QATTN = next((SAGE_ROOT / "sageattention").glob("_qattn_sm89*.so"))
+CONSUMER_BINARY = _required_env("H3_SWIGLU_NVFP4_LIBRARY")
+SAGE_FUSED = _one_glob(SAGE_ROOT / "sageattention", "_fused*.so")
+SAGE_QATTN = _one_glob(SAGE_ROOT / "sageattention", "_qattn_sm89*.so")
 
 EXPECTED_SHA256 = {
     Q_BINARY: "b97b30c30222276d490d2a3d4cf2fff1081d7ff3a66d8e01395589feccd2da1f",

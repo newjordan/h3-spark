@@ -20,8 +20,20 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 MINIMAX = REPO / "integration" / "comfyui" / "comfy" / "ldm" / "minimax"
-PROFILE_TXT = Path("$HOME/h3/results/accepted_stack_20260812.txt")
-PROFILE_JSON = REPO / "benchmarks" / "profiles" / "accepted_stack_20260812.json"
+
+
+def _load_h3_paths():
+    import importlib.util
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
 
 BLOCKS = 50
 # Measured on the accepted stack (see PERFORMANCE.md).
@@ -117,9 +129,12 @@ def parse_profile_calls(path: Path) -> dict:
 
 
 def main() -> int:
+    paths = _load_h3_paths()
+    profile_txt = paths.require_env_path("H3_PROFILE_TXT", kind="file")
+    profile_json = paths.require_env_path("H3_PROFILE_JSON", kind="file")
     syncs = count_hot_syncs(MINIMAX)
-    profile = parse_profile_calls(PROFILE_TXT)
-    compact = json.loads(PROFILE_JSON.read_text())
+    profile = parse_profile_calls(profile_txt)
+    compact = json.loads(profile_json.read_text())
     compact_cbf = float(compact["top_cuda_self_ms_per_eval"]["command_buffer_full"])
 
     launches = LAUNCH_KERNEL + LAUNCH_KERNEL_EX
@@ -158,8 +173,8 @@ def main() -> int:
             "hits": syncs["hits"],
         },
         "profile": {
-            "source_txt": str(PROFILE_TXT),
-            "source_json": str(PROFILE_JSON.relative_to(REPO)),
+            "source_txt": str(profile_txt),
+            "source_json": str(profile_json),
             "parsed": profile,
             "cbf_cuda_ms": CBF_CUDA_MS,
             "cbf_cpu_s": CBF_CPU_S,
