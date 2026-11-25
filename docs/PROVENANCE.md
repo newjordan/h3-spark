@@ -34,6 +34,9 @@ not provided.
 - Model checkpoints, weights, quantization sidecars, safetensors, and hashes
   that reveal machine-local storage layout.
 - Native `.so` files, cubins, objects, CMake caches, and JIT/build trees.
+  `cmake-build-120` and `cmake-build-sat` directories that had been committed
+  before this exclusion were removed. They held host CMake caches (including
+  machine-local prefix paths) and binaries built for the wrong architecture.
 - Raw profiler traces, caches, generated contact sheets, images, audio, videos,
   public-site assets, prompts, and reference concepts.
 - Calibration artifacts bound to a specific private concept or source path.

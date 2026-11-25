@@ -9,7 +9,6 @@ on a 20-eval DiT residual chain. No FixedRef render, no VAE/MP4, no promotion.
 from __future__ import annotations
 
 import json
-import os
 import sys
 import time
 from collections import Counter
@@ -21,7 +20,22 @@ import torch.nn.functional as F
 
 
 HERE = Path(__file__).resolve().parent
-COMFY = Path(os.environ.get("COMFYUI_ROOT", "$HOME/comfyui-h3-current"))
+
+
+def _load_h3_paths():
+    import importlib.util
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
+
+
 ROWS = 20423
 WIDTH = 5376
 QKV_OUT = 21504
@@ -151,8 +165,9 @@ def profile_one(fn) -> dict:
 
 def main() -> int:
     torch.set_grad_enabled(False)
-    if str(COMFY) not in sys.path:
-        sys.path.insert(0, str(COMFY))
+    comfy = _load_h3_paths().require_env_path("COMFYUI_ROOT", kind="dir")
+    if str(comfy) not in sys.path:
+        sys.path.insert(0, str(comfy))
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(

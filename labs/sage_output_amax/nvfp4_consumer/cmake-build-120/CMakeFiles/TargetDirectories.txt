@@ -1,3 +1,0 @@
-$HOME/H3_spark/labs/sage_output_amax/nvfp4_consumer/cmake-build-120/CMakeFiles/h3_swiglu_nvfp4_native_v1.dir
-$HOME/H3_spark/labs/sage_output_amax/nvfp4_consumer/cmake-build-120/CMakeFiles/edit_cache.dir
-$HOME/H3_spark/labs/sage_output_amax/nvfp4_consumer/cmake-build-120/CMakeFiles/rebuild_cache.dir

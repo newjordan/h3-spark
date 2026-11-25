@@ -49,7 +49,8 @@ class H3ProfilerModel:
             "model": ("MODEL",),
             "wait_calls": ("INT", {"default": 2, "min": 0, "max": 100}),
             "active_calls": ("INT", {"default": 1, "min": 1, "max": 20}),
-            "out_prefix": ("STRING", {"default": "/tmp/h3_prof"}),
+            "out_prefix": ("STRING", {"default": "h3_prof",
+                                      "tooltip": "Trace prefix. Relative paths land in the process working directory."}),
         }}
 
     RETURN_TYPES = ("MODEL",)

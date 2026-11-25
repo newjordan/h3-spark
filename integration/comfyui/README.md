@@ -23,6 +23,9 @@ artifact. Missing, partial, stale, foreign-hooked, or identity-mismatched
 bridges fail closed before native mutation.
 
 Use `scripts/install_comfyui_overlay.sh` from the repository root. It verifies
-the upstream revision and refuses a dirty target. Build native libraries from
-`labs/` against the exact target Python/PyTorch environment; do not commit
-generated `.so` files.
+the upstream revision and refuses a dirty target. Repository tests are not
+copied into the ComfyUI tree. Build native libraries with
+`scripts/build_native.sh` against the exact target Python/PyTorch environment;
+do not commit generated `.so` files. The attention node offers `quality`,
+`fast`, and `stock`. `sage3_kfold` is not shipped and is rejected instead of
+being silently replaced by another kernel.

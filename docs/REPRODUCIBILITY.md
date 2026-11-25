@@ -80,9 +80,25 @@ for lab in q_rms_rope_int8 rms_adaln_nvfp4_static \
 done
 ```
 
+`scripts/build_native.sh` configures every `labs/**/CMakeLists.txt` project
+into that project's `build/` directory. `scripts/build_native.sh --list`
+prints the projects and does not configure or compile. Set
+`H3_TORCH_CUDA_ARCH_LIST` to override each project's default architecture.
+
 `labs/q_deployment/rebuild_release.sh` and `validate_release.sh` freeze the
 Sage/Q/consumer rebuild and identity checks. They require `H3_PYTHON` and
 explicit source/binary arguments; they contain no machine defaults.
+
+Lab gates do not fall back to a home-directory checkout. Set `COMFYUI_ROOT`
+before a gate that imports ComfyUI. SwiGLU serving comparisons need
+`H3_SWIGLU_NVFP4_LIBRARY`. The inline-G comparison reads the candidate from
+`labs/sage_output_amax/nvfp4_consumer/build/` (or
+`H3_SWIGLU_NVFP4_CANDIDATE`) and the previous library from
+`H3_SWIGLU_NVFP4_REFERENCE_LIBRARY`. Profile gates need `H3_PROFILE_TXT` and
+`H3_PROFILE_JSON`; those profile files are not in this repository.
+`labs/q_rms_rope_int8/gate_release_parity.py` also needs `H3_SAGE_ROOT` and
+`H3_NVFP4_CONSUMER_ROOT`, and looks for the Q library in
+`labs/q_rms_rope_int8/build/` unless `H3_Q_RMS_ROPE_INT8_LIBRARY` is set.
 
 ## Seconds-scale CUDA gates
 

@@ -23,16 +23,24 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 ROWS = 20423
 DENOM = 6.0 * 448.0
-SERVING_SO = Path(
-    "$HOME/comfyui-h3-current/comfy/ldm/minimax/"
-    "swiglu_nvfp4_native_v1.so"
-)
 SERVING_SHA256 = (
     "45b21fe1957e535a860fcd28014b6b194666a29b5b98f4672c7e3b99230edb8f"
 )
 MODULE_NAME = "h3_swiglu_nvfp4_native_v1"
-PROFILE_TXT = Path("$HOME/h3/results/accepted_stack_20260812.txt")
-PROFILE_JSON = REPO / "benchmarks" / "profiles" / "accepted_stack_20260812.json"
+
+
+def _load_h3_paths():
+    import importlib.util
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "scripts" / "h3_paths.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("h3_paths", candidate)
+            if spec is None or spec.loader is None:
+                break
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+    raise SystemExit("error: scripts/h3_paths.py not found")
 BLOCKS = 50
 
 # Accepted eval: 200 FillFunctor<int> + 200 FillFunctor<unsigned char>.
@@ -353,9 +361,13 @@ def two_draw_scale_reuse(native, fn_name: str, a, b) -> dict:
 
 
 def main() -> int:
+    paths = _load_h3_paths()
+    serving_so = paths.require_env_path("H3_SWIGLU_NVFP4_LIBRARY", kind="file")
+    profile_txt = paths.require_env_path("H3_PROFILE_TXT", kind="file")
+    profile_json = paths.require_env_path("H3_PROFILE_JSON", kind="file")
     device = torch.device("cuda")
-    serving_sha = sha256_file(SERVING_SO)
-    native = load_so(SERVING_SO)
+    serving_sha = sha256_file(serving_so)
+    native = load_so(serving_so)
     required = (
         "swiglu_nvfp4",
         "swiglu_nvfp4_dynamic",
@@ -395,8 +407,8 @@ def main() -> int:
         "bf16_5376": two_draw_scale_reuse(native, "bf16", x5376, x5376_b),
     }
 
-    profile = parse_profile(PROFILE_TXT)
-    compact = json.loads(PROFILE_JSON.read_text())
+    profile = parse_profile(profile_txt)
+    compact = json.loads(profile_json.read_text())
     n_scale_rows = scale_rows(ROWS)
     n_padded = padded_rows(ROWS)
 
@@ -505,8 +517,8 @@ def main() -> int:
             for slot in TENSORS_PER_BLOCK
         ],
         "profile": {
-            "source_txt": str(PROFILE_TXT),
-            "source_json": str(PROFILE_JSON.relative_to(REPO)),
+            "source_txt": str(profile_txt),
+            "source_json": str(profile_json),
             "parsed": profile,
             "ok": profile_ok,
             "no_bf16_amax_kernel": profile.get("bf16_amax") is None,
@@ -540,7 +552,7 @@ def main() -> int:
         "patched_serving": False,
         "promoted": False,
         "serving_default": "stock",
-        "serving_so": str(SERVING_SO),
+        "serving_so": str(serving_so),
         "serving_sha256": serving_sha,
         "serving_sha256_expected": SERVING_SHA256,
         "serving_sha256_match": sha_ok,

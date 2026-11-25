@@ -1,6 +1,4 @@
-# Keep generated build output and caches out of the tree.
-# (docs/PROVENANCE.md excludes these; pre-existing tracked files
-# under cmake-build*/ predate this rule — remove them separately.)
+# Generated build output, caches, and local environments.
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -11,3 +9,6 @@ cmake-build*/
 *.cubin
 *.fatbin
 *.ptx
+.venv/
+dist/
+*.egg-info/

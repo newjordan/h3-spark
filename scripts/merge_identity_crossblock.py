@@ -11,13 +11,20 @@ import os
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-LIVE = Path(
-    os.environ.get(
-        "H3_LIVE_MODEL",
-        str(REPO.parent / "comfyui-h3-current/comfy/ldm/minimax/model.py"),
-    )
-)
 OVERLAY = REPO / "integration/comfyui/comfy/ldm/minimax/model.py"
+
+
+def live_model_path() -> Path:
+    raw = os.environ.get("H3_LIVE_MODEL", "").strip()
+    if not raw:
+        raise SystemExit(
+            "error: set H3_LIVE_MODEL to the live comfy/ldm/minimax/model.py "
+            "to merge. This script does not assume a sibling checkout."
+        )
+    path = Path(raw).expanduser()
+    if not path.is_file():
+        raise SystemExit(f"error: H3_LIVE_MODEL is not a file: {path}")
+    return path
 
 CROSSBLOCK_IMPORT = '''from comfy.ldm.minimax.first_block_cache import resolve_cache, run_block_stack
 from comfy.ldm.minimax.crossblock_gate_qkv import (
@@ -387,7 +394,8 @@ def replace_forward(src: str) -> str:
 
 
 def main() -> None:
-    src = LIVE.read_text()
+    live = live_model_path()
+    src = live.read_text()
     old_imp = "from comfy.ldm.minimax.first_block_cache import run_block_stack\n"
     if old_imp not in src:
         raise SystemExit("live first_block_cache import not found")
@@ -405,8 +413,10 @@ def main() -> None:
         raise SystemExit("live block loop not found")
     src = src.replace(OLD_LOOP, NEW_LOOP, 1)
     OVERLAY.write_text(src)
-    LIVE.write_text(src)
-    print(f"wrote {OVERLAY} and {LIVE} ({len(src.splitlines())} lines)")
+    live.write_text(src)
+    print(f"wrote {OVERLAY}")
+    print(f"wrote {live}")
+    print(f"{len(src.splitlines())} lines")
 
 
 if __name__ == "__main__":
